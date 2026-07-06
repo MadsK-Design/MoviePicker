@@ -1,0 +1,254 @@
+body{
+    font-family: Arial, sans-serif;
+    margin:40px;
+}
+
+input,
+select,
+button{
+    padding:10px;
+    margin:5px;
+}
+
+#movieHours {
+    width: 60px;
+}
+
+.time-inputs {
+    display: flex;
+}
+
+#movieList{
+    margin-top:30px;
+}
+details {
+    margin: 10px 0;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: fit-content;
+    user-select: none;
+}
+
+#genreContainer {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+.form{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+}
+
+.dropdown{
+    position:relative;
+}
+
+#filterGenreButton,
+#genreButton{
+    width:130px;
+    height:42px;
+    border:1px solid #ccc;
+    background:white;
+    border-radius:5px;
+    cursor:pointer;
+    text-align:left;
+    padding:0 12px;
+}
+
+.dropdown-content{
+
+    display:none;
+
+    position:absolute;
+
+    top:45px;
+    left:0;
+
+    width:220px;
+
+    background:white;
+
+    border:1px solid #ccc;
+
+    border-radius:5px;
+
+    padding:10px;
+
+    max-height:250px;
+
+    overflow-y:auto;
+
+    box-shadow:0 5px 10px rgba(0,0,0,.2);
+
+    z-index:1000;
+
+}
+
+.dropdown-content label{
+
+    display:block;
+
+    padding:4px 0;
+
+}
+
+#movieList {
+    margin-top: 25px;
+    display: grid;
+    gap: 15px;
+}
+
+.movie-card {
+    padding: 18px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.movie-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.movie-card-header h3 {
+    margin: 0;
+}
+
+.movie-card-body p {
+    margin: 8px 0;
+}
+
+.movie-menu {
+    position: relative;
+}
+
+.movie-menu-button {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.movie-menu-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 35px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    min-width: 120px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+.movie-menu-content.show {
+    display: block;
+}
+
+.delete-movie-button {
+    width: 100%;
+    border: none;
+    background: white;
+    color: #c62828;
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.delete-movie-button:hover {
+    background: #fdeaea;
+}
+
+.mark-watched-button {
+    width: 100%;
+    border: none;
+    background: white;
+    color: #2e7d32;
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mark-watched-button:hover {
+    background: #e8f5e9;
+}
+
+
+.random-result {
+    margin-top: 20px;
+    padding: 18px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.random-result h3 {
+    margin-top: 0;
+}
+
+.random-result h2 {
+    margin-bottom: 10px;
+}
+
+.random-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+}
+
+.random-info {
+    flex: 1;
+}
+
+.random-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.random-watch-button {
+    padding: 10px 20px;
+
+    background: #2e7d32;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.filter-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#filterHours,
+#filterMinutes {
+    width: 110px;
+}

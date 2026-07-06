@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Picker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h1>🎬 Movie Picker</h1>
+
+    <div class="form">
+
+        <input
+            type="text"
+            id="movieName"
+            placeholder="Movie Name">
+
+        <div class="time-inputs">
+
+            <input
+                type="number"
+                id="movieHours"
+                placeholder="Hours"
+                min="0">
+
+            <input
+                type="number"
+                id="movieMinutes"
+                placeholder="Minutes"
+                min="0"
+                max="59">
+
+        </div>
+
+        <div class="dropdown">
+
+            <button id="genreButton" type="button">
+                Select Genres ▼
+            </button>
+
+            <div id="genreContainer" class="dropdown-content"></div>
+
+        </div>
+
+        <button id="addMovie">
+            Add Movie
+        </button>
+
+    </div>
+
+    <hr>
+
+ <div class="random-picker">
+
+    <div class="filters">
+
+        <div class="dropdown">
+            <button id="filterGenreButton" type="button">
+                Filter Genres ▼
+            </button>
+
+            <div id="filterGenreContainer" class="dropdown-content"></div>
+        </div>
+
+        <div class="filter-time-inputs">
+            <input
+                type="number"
+                id="filterHours"
+                placeholder="Max Hours"
+                min="0">
+
+            <input
+                type="number"
+                id="filterMinutes"
+                placeholder="Max Minutes"
+                min="0"
+                max="59">
+        </div>
+
+        <button id="randomMovieButton">
+            🎲 Pick Random Movie
+        </button>
+
+    </div>
+
+    <div id="randomMovieResult"></div>
+
+</div>
+
+    <h2>Movies</h2>
+
+    <div id="movieList"></div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- JavaScript -->
+    <script src="config.js"></script>
+    <script src="database.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
