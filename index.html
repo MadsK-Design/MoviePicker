@@ -10,6 +10,33 @@
 </head>
 
 <body>
+<div id="login">
+
+    <h1>🎬 Movie Picker</h1>
+
+    <input
+        type="text"
+        id="loginUsername"
+        placeholder="Username">
+
+    <input
+        type="password"
+        id="loginPassword"
+        placeholder="Password">
+
+    <button id="loginButton">Login</button>
+
+    <p id="loginError"></p>
+
+</div>
+
+
+<div id="app" class="hidden">
+
+    <div class="top-bar">
+        <button id="logoutButton">Logout</button>
+    </div>    
+
 
     <h1>🎬 Movie Picker</h1>
 
@@ -61,7 +88,7 @@
 
         <div class="dropdown">
             <button id="filterGenreButton" type="button">
-                Filter Genres ▼
+                Select Genres ▼
             </button>
 
             <div id="filterGenreContainer" class="dropdown-content"></div>
@@ -82,6 +109,14 @@
                 max="59">
         </div>
 
+        <label class="watched-toggle">
+            <input
+                type="checkbox"
+                id="includeWatchedRandom">
+
+            Include Watched
+        </label>
+
         <button id="randomMovieButton">
             🎲 Pick Random Movie
         </button>
@@ -92,9 +127,86 @@
 
 </div>
 
-    <h2>Movies</h2>
+<hr>
 
-    <div id="movieList"></div>
+<p>Sort the Movielist</p>
+
+<div class="list-filters">
+
+    <div class="dropdown">
+        <button id="listFilterGenreButton" type="button">
+            Filter Genres ▼
+        </button>
+
+        <div id="listFilterGenreContainer" class="dropdown-content"></div>
+    </div>
+
+    <div class="list-filter-time-inputs">
+        <input
+            type="number"
+            id="listFilterHours"
+            placeholder="Max Hours"
+            min="0">
+
+        <input
+            type="number"
+            id="listFilterMinutes"
+            placeholder="Max Minutes"
+            min="0"
+            max="59">
+    </div>
+
+    <label class="watched-toggle">
+    <input
+        type="checkbox"
+        id="showWatched">
+
+    Show Watched
+    </label>
+
+    </div>
+
+        <h2>Movies</h2>
+
+        <div id="movieList"></div>
+
+        <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+
+            <h2>Edit Movie</h2>
+
+            <input
+                type="text"
+                id="editMovieName"
+                placeholder="Movie Name">
+
+            <div class="time-inputs">
+                <input
+                    type="number"
+                    id="editMovieHours"
+                    placeholder="Hours"
+                    min="0">
+
+                <input
+                    type="number"
+                    id="editMovieMinutes"
+                    placeholder="Minutes"
+                    min="0"
+                    max="59">
+            </div>
+
+            <div id="editGenreContainer" class="edit-genre-container"></div>
+
+            <div class="edit-actions">
+                <button id="saveEditButton">Save Changes</button>
+                <button id="cancelEditButton">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+
+
+</div>
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -103,6 +215,8 @@
     <script src="config.js"></script>
     <script src="database.js"></script>
     <script src="script.js"></script>
+    <script src="login.js"></script>
+
 
 </body>
 

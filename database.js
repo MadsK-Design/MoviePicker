@@ -56,3 +56,50 @@ async function markMovieAsWatched(id) {
 
     return true;
 }
+
+async function unmarkMovieAsWatched(id) {
+    const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .update({ Watched: false })
+        .eq("Id", Number(id));
+
+    if (error) {
+        console.error("Error unmarking movie as watched:", error);
+        alert("Could not remove watched status.");
+        return false;
+    }
+
+    return true;
+}
+
+async function editMovieInDatabase(id, updatedMovie) {
+    const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .update(updatedMovie)
+        .eq("Id", Number(id));
+
+    if (error) {
+        console.error("Error editing movie:", error);
+        alert("Could not edit the movie.");
+        return false;
+    }
+
+    return true;
+}
+
+async function getUserTable(userId) {
+    const { data, error } = await supabaseClient
+        .from("1_Users")
+        .select("table_name")
+        .eq("user_id", userId)
+        .single();
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+
+    if (error) {
+        return null;
+    }
+
+    return data.table_name;
+}

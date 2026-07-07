@@ -5,6 +5,7 @@ const genres = [
     "Comedy",
     "Crime",
     "Drama",
+    "Documentary",
     "Fantasy",
     "Horror",
     "Mystery",
@@ -13,6 +14,8 @@ const genres = [
     "Sci-Fi",
     "Thriller"
 ];
+
+let movieBeingEditedId = null;
 
 let movies = [];
 
@@ -26,7 +29,19 @@ const filterGenreButton = document.getElementById("filterGenreButton");
 const filterGenreContainer = document.getElementById("filterGenreContainer");
 const filterHoursInput = document.getElementById("filterHours");
 const filterMinutesInput = document.getElementById("filterMinutes");
-
+const listFilterGenreButton = document.getElementById("listFilterGenreButton");
+const listFilterGenreContainer = document.getElementById("listFilterGenreContainer");
+const listFilterHoursInput = document.getElementById("listFilterHours");
+const listFilterMinutesInput = document.getElementById("listFilterMinutes");
+const showWatchedCheckbox = document.getElementById("showWatched");
+const includeWatchedRandomCheckbox = document.getElementById("includeWatchedRandom");
+const editModal = document.getElementById("editModal");
+const editMovieName = document.getElementById("editMovieName");
+const editMovieHours = document.getElementById("editMovieHours");
+const editMovieMinutes = document.getElementById("editMovieMinutes");
+const editGenreContainer = document.getElementById("editGenreContainer");
+const saveEditButton = document.getElementById("saveEditButton");
+const cancelEditButton = document.getElementById("cancelEditButton");
 
 function loadGenres() {
     genres.forEach(genre => {
@@ -110,7 +125,9 @@ async function addMovie() {
 function renderMovies() {
     movieList.innerHTML = "";
 
-    movies.forEach(movie => {
+    const filteredMovies = getFilteredMoviesForList();
+
+    filteredMovies.forEach(movie => {
         const card = document.createElement("div");
         card.classList.add("movie-card");
 
@@ -120,12 +137,31 @@ function renderMovies() {
 
         card.innerHTML = `
             <div class="movie-card-header">
-                <h3>${movie.Name}</h3>
+                <div>
+                    <h3>${movie.Name}</h3>
 
+                    ${movie.Watched ? `
+                        <span class="watched-tag">
+                            Watched
+                            <button
+                                class="remove-watched-button"
+                                data-id="${movie.Id}"
+                                title="Remove watched status">
+                                ×
+                            </button>
+                        </span>
+                    ` : ""}
+                </div>
+                
                 <div class="movie-menu">
                     <button class="movie-menu-button">⋮</button>
 
                     <div class="movie-menu-content">
+
+                        <button class="edit-movie-button" data-id="${movie.Id}">
+                            Edit
+                        </button>
+
                         <button class="mark-watched-button" data-id="${movie.Id}">
                             Mark as Watched
                         </button>
@@ -133,7 +169,9 @@ function renderMovies() {
                         <button class="delete-movie-button" data-id="${movie.Id}" data-name="${movie.Name}">
                             Delete
                         </button>
+
                     </div>
+                    
                 </div>
             </div>
 
@@ -182,6 +220,7 @@ document.addEventListener("click", event => {
     if (!event.target.closest(".dropdown")) {
         genreContainer.style.display = "none";
         filterGenreContainer.style.display = "none";
+        listFilterGenreContainer.style.display = "none";
     }
 });
 
@@ -192,7 +231,13 @@ function pickRandomMovie() {
     const filterMinutes = parseInt(filterMinutesInput.value) || 0;
     const maxRuntime = filterHours * 60 + filterMinutes;
 
-    let availableMovies = movies.filter(movie => movie.Watched === false);
+    let availableMovies;
+
+    if (includeWatchedRandomCheckbox.checked) {
+        availableMovies = [...movies];
+    } else {
+        availableMovies = movies.filter(movie => movie.Watched === false);
+    }
 
     if (selectedFilterGenres.length > 0) {
         availableMovies = availableMovies.filter(movie => {
@@ -272,7 +317,7 @@ function updateFilterGenreButtonText() {
     const selectedGenres = getSelectedFilterGenres();
 
     if (selectedGenres.length === 0) {
-        filterGenreButton.textContent = "Filter Genres ▼";
+        filterGenreButton.textContent = "Select Genres ▼";
     } else if (selectedGenres.length <= 2) {
         filterGenreButton.textContent = selectedGenres.join(", ") + " ▼";
     } else {
@@ -280,11 +325,174 @@ function updateFilterGenreButtonText() {
     }
 }
 
+function loadListFilterGenres() {
+    genres.forEach(genre => {
+        const label = document.createElement("label");
+
+        label.innerHTML = `
+            <input type="checkbox" value="${genre}">
+            ${genre}
+        `;
+
+        listFilterGenreContainer.appendChild(label);
+    });
+}
+
+function getSelectedListFilterGenres() {
+    return [...document.querySelectorAll("#listFilterGenreContainer input:checked")]
+        .map(box => box.value);
+}
+
+function updateListFilterGenreButtonText() {
+    const selectedGenres = getSelectedListFilterGenres();
+
+    if (selectedGenres.length === 0) {
+        listFilterGenreButton.textContent = "Filter Genres ▼";
+    } else if (selectedGenres.length <= 2) {
+        listFilterGenreButton.textContent = selectedGenres.join(", ") + " ▼";
+    } else {
+        listFilterGenreButton.textContent = `${selectedGenres.length} genres selected ▼`;
+    }
+}
+
+function getFilteredMoviesForList() {
+    const selectedGenres = getSelectedListFilterGenres();
+
+    const filterHours = parseInt(listFilterHoursInput.value) || 0;
+    const filterMinutes = parseInt(listFilterMinutesInput.value) || 0;
+    const maxRuntime = filterHours * 60 + filterMinutes;
+
+    let filteredMovies;
+
+    if (showWatchedCheckbox.checked) {
+        filteredMovies = movies.filter(movie => movie.Watched === true);
+    } else {
+        filteredMovies = movies.filter(movie => movie.Watched === false);
+    }
+
+    if (selectedGenres.length > 0) {
+        filteredMovies = filteredMovies.filter(movie => {
+            const movieGenres = movie.Genre
+                ? movie.Genre.split(",")
+                : [];
+
+            return selectedGenres.some(genre => movieGenres.includes(genre));
+        });
+    }
+
+    if (maxRuntime > 0) {
+        filteredMovies = filteredMovies.filter(movie => movie.Time <= maxRuntime);
+    }
+
+    return filteredMovies;
+}
+
+function loadEditGenres() {
+    editGenreContainer.innerHTML = "";
+
+    genres.forEach(genre => {
+        const label = document.createElement("label");
+
+        label.innerHTML = `
+            <input type="checkbox" value="${genre}">
+            ${genre}
+        `;
+
+        editGenreContainer.appendChild(label);
+    });
+}
+
+function openEditModal(movie) {
+    movieBeingEditedId = movie.Id;
+
+    editMovieName.value = movie.Name;
+
+    editMovieHours.value = Math.floor(movie.Time / 60);
+    editMovieMinutes.value = movie.Time % 60;
+
+    const movieGenres = movie.Genre
+        ? movie.Genre.split(",")
+        : [];
+
+    document.querySelectorAll("#editGenreContainer input")
+        .forEach(box => {
+            box.checked = movieGenres.includes(box.value);
+        });
+
+    editModal.classList.remove("hidden");
+}
+
+function closeEditModal() {
+    editModal.classList.add("hidden");
+    movieBeingEditedId = null;
+}
+
+async function saveEditedMovie() {
+    const name = editMovieName.value.trim();
+
+    const hours = parseInt(editMovieHours.value) || 0;
+    const minutes = parseInt(editMovieMinutes.value) || 0;
+    const time = hours * 60 + minutes;
+
+    const selectedGenres = [...document.querySelectorAll("#editGenreContainer input:checked")]
+        .map(box => box.value);
+
+    if (name === "") {
+        alert("Please enter a movie name.");
+        return;
+    }
+
+    if (minutes > 59) {
+        alert("Minutes cannot be more than 59.");
+        return;
+    }
+
+    if (time <= 0) {
+        alert("Please enter a runtime.");
+        return;
+    }
+
+    if (selectedGenres.length === 0) {
+        alert("Please select at least one genre.");
+        return;
+    }
+
+    const updatedMovie = {
+        Name: name,
+        Time: time,
+        Genre: selectedGenres.join(",")
+    };
+
+    const success = await editMovieInDatabase(movieBeingEditedId, updatedMovie);
+
+    if (success) {
+        closeEditModal();
+        await loadMovies();
+    }
+}
+
+
+
+
+
+
+
+
+
 genreContainer.addEventListener("change", updateGenreButtonText);
 
 addMovieButton.addEventListener("click", addMovie);
 
 randomMovieButton.addEventListener("click", pickRandomMovie);
+
+showWatchedCheckbox.addEventListener("change", renderMovies);
+
+saveEditButton.addEventListener("click", saveEditedMovie);
+
+cancelEditButton.addEventListener("click", closeEditModal);
+
+
+
 
 movieList.addEventListener("click", async event => {
     if (event.target.classList.contains("movie-menu-button")) {
@@ -301,6 +509,19 @@ movieList.addEventListener("click", async event => {
         return;
     }
 
+    if (event.target.classList.contains("edit-movie-button")) {
+    const id = Number(event.target.dataset.id);
+    const movie = movies.find(movie => movie.Id === id);
+
+    if (!movie) {
+        alert("Movie not found.");
+        return;
+    }
+
+    openEditModal(movie);
+    return;
+    }
+
     if (event.target.classList.contains("mark-watched-button")) {
         const id = event.target.dataset.id;
 
@@ -309,6 +530,18 @@ movieList.addEventListener("click", async event => {
         if (success) {
             await loadMovies();
         }
+    }
+
+    if (event.target.classList.contains("remove-watched-button")) {
+    const id = event.target.dataset.id;
+
+    const success = await unmarkMovieAsWatched(id);
+
+    if (success) {
+        await loadMovies();
+    }
+
+    return;
     }
 
     if (event.target.classList.contains("delete-movie-button")) {
@@ -324,6 +557,9 @@ movieList.addEventListener("click", async event => {
         if (success) {
             await loadMovies();
         }
+
+        return;
+
     }
 });
 
@@ -364,9 +600,37 @@ filterGenreButton.addEventListener("click", () => {
 filterGenreContainer.addEventListener("change", updateFilterGenreButtonText);
 
 
+listFilterGenreButton.addEventListener("click", () => {
+    listFilterGenreContainer.style.display =
+        listFilterGenreContainer.style.display === "block" ? "none" : "block";
+});
+
+listFilterGenreContainer.addEventListener("change", () => {
+    updateListFilterGenreButtonText();
+    renderMovies();
+});
+
+listFilterHoursInput.addEventListener("input", renderMovies);
+listFilterMinutesInput.addEventListener("input", renderMovies);
+
+includeWatchedRandomCheckbox.addEventListener("change", () => {
+    randomMovieResult.innerHTML = "";
+});
+
+
+editModal.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        saveEditedMovie();
+    }
+});
+
+//loadMovies();
 
 loadGenres();
 updateGenreButtonText();
-loadMovies();
 loadFilterGenres();
 updateFilterGenreButtonText();
+loadListFilterGenres();
+updateListFilterGenreButtonText();
+loadEditGenres();
