@@ -52,7 +52,7 @@ summary {
 #listFilterGenreButton,
 #filterGenreButton,
 #genreButton{
-    width:130px;
+    width:150px;
     height:42px;
     border:1px solid #ccc;
     background:white;
@@ -414,4 +414,96 @@ summary {
 
 #logoutButton:hover {
     background: #b71c1c;
+}
+
+input,
+select,
+textarea,
+button {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+
+    body {
+        margin: 20px;
+    }
+
+    h1 {
+        font-size: 32px;
+    }
+
+    .form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .list-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .time-inputs,
+    .filter-time-inputs,
+    .list-filter-time-inputs {
+        width: 100%;
+    }
+
+    input,
+    button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #genreButton,
+    #filterGenreButton,
+    #listFilterGenreButton {
+        width: 100%;
+    }
+
+    #movieHours,
+    #movieMinutes,
+    #filterHours,
+    #filterMinutes,
+    #listFilterHours,
+    #listFilterMinutes {
+        flex: 1;
+        width: auto;
+    }
+
+    .movie-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .movie-menu {
+        align-self: flex-end;
+    }
+
+    .random-result {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+    }
+
+    .random-actions {
+        width: 100%;
+    }
+
+    .random-watch-button {
+        width: 100%;
+    }
+
+    .top-bar {
+        justify-content: center;
+    }
+
+    #logoutButton {
+        width: 100%;
+    }
 }
