@@ -63,6 +63,34 @@ async function logoutUser() {
 
 }
 
+async function checkExistingSession() {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (!data.session) {
+        loginSection.classList.remove("hidden");
+        appSection.classList.add("hidden");
+        return;
+    }
+
+    const user = data.session.user;
+
+    const tableName = await getUserTable(user.id);
+
+    if (!tableName) {
+        await supabaseClient.auth.signOut();
+        loginSection.classList.remove("hidden");
+        appSection.classList.add("hidden");
+        return;
+    }
+
+    TABLE_NAME = tableName;
+
+    loginSection.classList.add("hidden");
+    appSection.classList.remove("hidden");
+
+    await loadMovies();
+}
+
 loginButton.addEventListener("click", loginUser);
 
 passwordInput.addEventListener("keydown", event => {
@@ -72,3 +100,6 @@ passwordInput.addEventListener("keydown", event => {
 });
 
 logoutButton.addEventListener("click", logoutUser);
+
+
+checkExistingSession();
