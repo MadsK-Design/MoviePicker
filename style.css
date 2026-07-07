@@ -420,7 +420,7 @@ input,
 select,
 textarea,
 button {
-    font-size: 16px;
+    font-size: 16px !important;
 }
 
 @media (max-width: 768px) {
@@ -454,7 +454,7 @@ button {
         width: 100%;
     }
 
-    input,
+    input:not([type="checkbox"]),
     button {
         width: 100%;
         box-sizing: border-box;
@@ -506,4 +506,13 @@ button {
     #logoutButton {
         width: 100%;
     }
+
+    .watched-toggle {
+        width: fit-content;
+    }
+
+    .watched-toggle input[type="checkbox"] {
+        width: auto;
+        flex: 0 0 auto;
+}
 }
