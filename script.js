@@ -554,7 +554,6 @@ function renderCustomGenresInModal() {
 function openGenreModal() {
     newGenreName.value = "";
     genreModal.classList.remove("hidden");
-    newGenreName.focus();
 }
 
 function closeGenreModal() {
