@@ -41,11 +41,11 @@ async function loginUser() {
     loginSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
+    await loadAllGenres();
     await loadMovies();
 }
 
 async function logoutUser() {
-
     await supabaseClient.auth.signOut();
 
     TABLE_NAME = "";
@@ -60,7 +60,6 @@ async function logoutUser() {
 
     appSection.classList.add("hidden");
     loginSection.classList.remove("hidden");
-
 }
 
 async function checkExistingSession() {
@@ -78,8 +77,10 @@ async function checkExistingSession() {
 
     if (!tableName) {
         await supabaseClient.auth.signOut();
+
         loginSection.classList.remove("hidden");
         appSection.classList.add("hidden");
+
         return;
     }
 
@@ -88,6 +89,7 @@ async function checkExistingSession() {
     loginSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
+    await loadAllGenres();
     await loadMovies();
 }
 
@@ -100,6 +102,5 @@ passwordInput.addEventListener("keydown", event => {
 });
 
 logoutButton.addEventListener("click", logoutUser);
-
 
 checkExistingSession();
