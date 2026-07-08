@@ -49,6 +49,14 @@ const genreModal = document.getElementById("genreModal");
 const newGenreName = document.getElementById("newGenreName");
 const confirmGenreButton = document.getElementById("confirmGenreButton");
 const cancelGenreButton = document.getElementById("cancelGenreButton");
+const movieSearch = document.getElementById("movieSearch");
+const showAddSectionButton = document.getElementById("showAddSection");
+const showPickSectionButton = document.getElementById("showPickSection");
+const addSection = document.getElementById("addSection");
+const pickSection = document.getElementById("pickSection");
+const toggleFiltersButton = document.getElementById("toggleFiltersButton");
+const filterSection = document.getElementById("filterSection");
+
 
 function loadGenres() {
     genres.forEach(genre => {
@@ -71,7 +79,7 @@ function updateGenreButtonText() {
     } else if (selectedGenres.length <= 2) {
         genreButton.textContent = selectedGenres.join(", ") + " ▼";
     } else {
-        genreButton.textContent = `${selectedGenres.length} genres selected ▼`;
+        genreButton.textContent = `${selectedGenres.length} genres selected`;
     }
 }
 
@@ -133,6 +141,7 @@ function renderMovies() {
     movieList.innerHTML = "";
 
     const filteredMovies = getFilteredMoviesForList();
+
 
     filteredMovies.forEach(movie => {
         const card = document.createElement("div");
@@ -363,7 +372,10 @@ function updateListFilterGenreButtonText() {
 }
 
 function getFilteredMoviesForList() {
+
     const selectedGenres = getSelectedListFilterGenres();
+
+    const searchText = movieSearch.value.trim().toLowerCase();
 
     const filterHours = parseInt(listFilterHoursInput.value) || 0;
     const filterMinutes = parseInt(listFilterMinutesInput.value) || 0;
@@ -377,6 +389,14 @@ function getFilteredMoviesForList() {
         filteredMovies = movies.filter(movie => movie.Watched === false);
     }
 
+    // 🔍 Search filter
+    if (searchText !== "") {
+        filteredMovies = filteredMovies.filter(movie =>
+            movie.Name.toLowerCase().includes(searchText)
+        );
+    }
+
+    // 🎭 Genre filter
     if (selectedGenres.length > 0) {
         filteredMovies = filteredMovies.filter(movie => {
             const movieGenres = movie.Genre
@@ -387,6 +407,7 @@ function getFilteredMoviesForList() {
         });
     }
 
+    // ⏱ Runtime filter
     if (maxRuntime > 0) {
         filteredMovies = filteredMovies.filter(movie => movie.Time <= maxRuntime);
     }
@@ -589,7 +610,7 @@ addGenreButton.addEventListener("click", openGenreModal);
 confirmGenreButton.addEventListener("click", saveNewGenre);
 cancelGenreButton.addEventListener("click", closeGenreModal);
 
-
+movieSearch.addEventListener("input", renderMovies);
 
 
 genreModal.addEventListener("click", async event => {
@@ -740,6 +761,43 @@ editModal.addEventListener("keydown", event => {
         saveEditedMovie();
     }
 });
+
+showAddSectionButton.addEventListener("click", () => {
+    const isActive = showAddSectionButton.classList.contains("active-tab");
+
+    addSection.classList.toggle("show-section", !isActive);
+    pickSection.classList.remove("show-section");
+
+    showAddSectionButton.classList.toggle("active-tab", !isActive);
+    showPickSectionButton.classList.remove("active-tab");
+});
+
+showPickSectionButton.addEventListener("click", () => {
+    const isActive = showPickSectionButton.classList.contains("active-tab");
+
+    pickSection.classList.toggle("show-section", !isActive);
+    addSection.classList.remove("show-section");
+
+    showPickSectionButton.classList.toggle("active-tab", !isActive);
+    showAddSectionButton.classList.remove("active-tab");
+});
+
+
+toggleFiltersButton.addEventListener("click", () => {
+
+    filterSection.classList.toggle("show-filter-section");
+
+    toggleFiltersButton.classList.toggle("active-filter");
+
+    if (filterSection.classList.contains("show-filter-section")) {
+        toggleFiltersButton.textContent = "Hide Filters";
+    } else {
+        toggleFiltersButton.textContent = "Show Filters";
+    }
+
+});
+
+
 
 //loadMovies();
 

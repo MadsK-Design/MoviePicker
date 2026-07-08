@@ -34,45 +34,57 @@
 <div id="app" class="hidden">
 
     <div class="top-bar">
-        <button id="logoutButton">Logout</button>
-    </div>    
+        <h1>Movie Picker</h1>
 
+        <button id="logoutButton">
+            Logout
+        </button>
+    </div>  
 
-    <h1>🎬 Movie Picker</h1>
+    <div class="action-tabs">
 
-    <div class="form">
+        <button id="showPickSection"  class="active-tab" type="button">
+            Pick Movie
+        </button>
+        
+        <button id="showAddSection" type="button">
+            Add Movie
+        </button>
 
-        <input
-            type="text"
-            id="movieName"
-            placeholder="Movie Name">
+    </div>
 
-        <div class="time-inputs">
+    <div id="addSection" class="action-section">
+        <div class="form">
 
             <input
-                type="number"
-                id="movieHours"
-                placeholder="Hours"
-                min="0">
+                type="text"
+                id="movieName"
+                placeholder="Movie Name">
 
-            <input
-                type="number"
-                id="movieMinutes"
-                placeholder="Minutes"
-                min="0"
-                max="59">
+            <div class="add-details-row">
 
-        </div>
+                <input
+                    type="number"
+                    id="movieHours"
+                    placeholder="Hours"
+                    min="0">
 
-        <div class="genre-controls">
+                <input
+                    type="number"
+                    id="movieMinutes"
+                    placeholder="Min"
+                    min="0"
+                    max="59">
 
-            <div class="dropdown">
+                <div class="dropdown add-genre-dropdown">
 
-                <button id="genreButton" type="button">
-                    Select Genres ▼
-                </button>
+                    <button id="genreButton" type="button">
+                        Select Genres ▼
+                    </button>
 
-                <div id="genreContainer" class="dropdown-content"></div>
+                    <div id="genreContainer" class="dropdown-content"></div>
+
+                </div>
 
             </div>
 
@@ -80,39 +92,102 @@
                 Custom Genres
             </button>
 
-        </div>
-
-        <button id="addMovie">
-            Add Movie
-        </button>
-
-    </div>
-
-    <hr>
-
- <div class="random-picker">
-
-    <div class="filters">
-
-        <div class="dropdown">
-            <button id="filterGenreButton" type="button">
-                Select Genres ▼
+            <button id="addMovie">
+                Add Movie
             </button>
 
-            <div id="filterGenreContainer" class="dropdown-content"></div>
+        </div>
+    </div>
+
+    
+<div id="pickSection" class="action-section show-section">
+    <div class="random-picker">
+
+        <div class="filters">
+
+            <div class="dropdown">
+                <button id="filterGenreButton" type="button">
+                    Select Genres ▼
+                </button>
+
+                <div id="filterGenreContainer" class="dropdown-content"></div>
+            </div>
+
+            <div class="time-toggle-row">
+
+                <input
+                    type="number"
+                    id="filterHours"
+                    placeholder="Max Hours"
+                    min="0">
+
+                <input
+                    type="number"
+                    id="filterMinutes"
+                    placeholder="Max Min"
+                    min="0"
+                    max="59">
+
+                <label class="watched-toggle">
+                    <input
+                        type="checkbox"
+                        id="includeWatchedRandom">
+
+                    Include Watched
+                </label>
+
+</div>
+
+            <button id="randomMovieButton">
+                Pick Random Movie
+            </button>
+
         </div>
 
-        <div class="filter-time-inputs">
+        <div id="randomMovieResult"></div>
+
+    </div>
+</div>
+
+
+
+
+
+<button
+    id="toggleFiltersButton"
+    type="button"
+    class="filter-toggle-button">
+        Show Filters
+</button>
+
+<div id="filterSection" class="hidden-filter-section">
+
+    <div class="list-filters">
+
+        <input
+        type="text"
+        id="movieSearch"
+        placeholder="Search movies...">
+
+        <div class="dropdown">
+            <button id="listFilterGenreButton" type="button">
+                Filter Genres ▼
+            </button>
+
+            <div id="listFilterGenreContainer" class="dropdown-content"></div>
+        </div>
+
+        <div class="list-filter-time-inputs">
             <input
                 type="number"
-                id="filterHours"
+                id="listFilterHours"
                 placeholder="Max Hours"
                 min="0">
 
             <input
                 type="number"
-                id="filterMinutes"
-                placeholder="Max Minutes"
+                id="listFilterMinutes"
+                placeholder="Max Min"
                 min="0"
                 max="59">
         </div>
@@ -120,59 +195,13 @@
         <label class="watched-toggle">
             <input
                 type="checkbox"
-                id="includeWatchedRandom">
+                id="showWatched">
 
-            Include Watched
+                Show Watched
         </label>
 
-        <button id="randomMovieButton">
-            🎲 Pick Random Movie
-        </button>
-
     </div>
-
-    <div id="randomMovieResult"></div>
-
 </div>
-
-<hr>
-
-<p>Sort the Movielist</p>
-
-<div class="list-filters">
-
-    <div class="dropdown">
-        <button id="listFilterGenreButton" type="button">
-            Filter Genres ▼
-        </button>
-
-        <div id="listFilterGenreContainer" class="dropdown-content"></div>
-    </div>
-
-    <div class="list-filter-time-inputs">
-        <input
-            type="number"
-            id="listFilterHours"
-            placeholder="Max Hours"
-            min="0">
-
-        <input
-            type="number"
-            id="listFilterMinutes"
-            placeholder="Max Minutes"
-            min="0"
-            max="59">
-    </div>
-
-    <label class="watched-toggle">
-    <input
-        type="checkbox"
-        id="showWatched">
-
-    Show Watched
-    </label>
-
-    </div>
 
         <h2>Movies</h2>
 
@@ -198,7 +227,7 @@
                 <input
                     type="number"
                     id="editMovieMinutes"
-                    placeholder="Minutes"
+                    placeholder="Min"
                     min="0"
                     max="59">
             </div>

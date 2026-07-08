@@ -52,7 +52,6 @@ summary {
 #listFilterGenreButton,
 #filterGenreButton,
 #genreButton{
-    width:150px;
     height:42px;
     border:1px solid #ccc;
     background:white;
@@ -417,22 +416,23 @@ summary {
 
 .top-bar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
+.top-bar h1 {
+    margin: 0;
+}
+
 #logoutButton {
-    background: #c62828;
-    color: white;
-
-    border: none;
-    border-radius: 6px;
-
-    padding: 10px 18px;
-
-    cursor: pointer;
-
+    width: auto;
+    min-width: 70px;
+    padding: 8px 14px;
+    font-size: 13px !important;
     font-weight: 600;
+    border-radius: 10px;
+    background: #cf2828;
 }
 
 #logoutButton:hover {
@@ -449,12 +449,20 @@ button {
 
 .genre-controls {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 10px;
+    width: 100%;
+}
+
+.genre-controls .dropdown {
+    flex: 2;
+}
+
+#genreButton {
+    width: 100%;
 }
 
 #addGenreButton {
-    height: 42px;
+    flex: 1;
 }
 
 .custom-genre-row {
@@ -488,6 +496,236 @@ button {
 
 .genre-name {
     flex: 1;
+}
+
+.action-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 30px 0 15px;
+}
+
+.action-tabs button {
+    flex: 1;
+    border: 1px solid #ccc;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.action-tabs .active-tab {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+.action-section {
+    display: none;
+}
+
+.action-section.show-section {
+    display: block;
+}
+
+.filter-toggle-button {
+    width: 100%;
+    height: 44px;
+
+    margin: 18px 0 10px;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+
+    background: white;
+
+    cursor: pointer;
+
+    font-weight: 600;
+}
+
+.hidden-filter-section {
+    display: none;
+}
+
+.hidden-filter-section.show-filter-section {
+    display: block;
+}
+
+.filter-toggle-button.active-filter {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+.time-toggle-row {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+}
+
+.time-toggle-row input,
+.time-toggle-row .watched-toggle {
+    flex: 1;
+}
+
+.watched-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 42px;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+
+    background: white;
+
+    font-size: 14px;
+    font-weight: 570;
+
+    cursor: pointer;
+}
+
+.watched-toggle input {
+    display: none;
+}
+
+.watched-toggle:has(input:checked) {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+.add-details-row {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+}
+
+.add-details-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.add-details-row .add-genre-dropdown {
+    flex: 3;
+    min-width: 0;
+}
+
+.add-details-row #genreButton {
+    width: 100%;
+}
+
+#addGenreButton {
+    width: 100%;
+    height: 42px;
+    flex: none;
+}
+
+#addMovie {
+    width: 100%;
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-weight: 600;
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease,
+                transform 0.1s ease;
+}
+
+#addMovie:hover {
+    background: #1d4ed8;
+}
+
+#addMovie:active {
+    transform: scale(0.98);
+}
+
+#movieHours,
+#movieMinutes,
+#filterHours,
+#filterMinutes,
+#listFilterHours,
+#listFilterMinutes {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: white;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+#movieHours:focus,
+#movieMinutes:focus,
+#filterHours:focus,
+#filterMinutes:focus,
+#listFilterHours:focus,
+#listFilterMinutes:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+#addGenreButton {
+    width: 100%;
+    height: 42px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    background: #f3f4f6;
+
+    color: #374151;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background .2s ease,
+                transform .1s ease;
+}
+
+#addGenreButton:hover {
+    background: #e5e7eb;
+}
+
+#addGenreButton:active {
+    transform: scale(.98);
+}
+
+#randomMovieButton {
+    width: 100%;
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background .2s ease,
+                transform .1s ease;
+}
+
+#randomMovieButton:hover {
+    background: #1d4ed8;
+}
+
+#randomMovieButton:active {
+    transform: scale(.98);
 }
 
 @media (max-width: 768px) {
@@ -557,15 +795,15 @@ button {
         width: 100%;
     }
 
-input:not([type="checkbox"]) {
-    width: 100%;
-    box-sizing: border-box;
-}
+    input:not([type="checkbox"]) {
+        width: 100%;
+        box-sizing: border-box;
+    }
 
-button:not(#addGenreButton) {
-    width: 100%;
-    box-sizing: border-box;
-}
+    button:not(#addGenreButton):not(#logoutButton):not(#toggleFiltersButton) {
+        width: 100%;
+        box-sizing: border-box;
+    }
 
     #genreButton,
     #filterGenreButton,
@@ -616,21 +854,39 @@ button:not(#addGenreButton) {
     }
 
     .top-bar {
-        justify-content: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .top-bar h1 {
+        font-size: 28px;
+        margin: 0;
     }
 
     #logoutButton {
+        width: auto;
+
+        min-width: 68px;
+        height: 34px;
+
+        padding: 0 12px;
+
+        font-size: 12px !important;
+    }
+
+    .time-toggle-row {
+        display: flex;
+        gap: 2px;
         width: 100%;
     }
 
-    .watched-toggle {
-        width: fit-content;
+    .time-toggle-row input,
+    .time-toggle-row .watched-toggle {
+        flex: 1;
+        min-width: 0;
     }
 
-    .watched-toggle input[type="checkbox"] {
-        width: auto;
-        flex: 0 0 auto;
-    }
     .delete-custom-genre-button {
         width: auto !important;
         margin-left: auto;
@@ -647,10 +903,37 @@ button:not(#addGenreButton) {
     }
 
     #addGenreButton {
+        width: 50%;
+        height: 42px;
+        flex: none;
+    }
+
+    .action-tabs {
+        margin-top: 28px;
+    }
+
+    .action-tabs button {
+        height: 44px;
+    }
+
+    .filter-toggle-button {
+        margin-left: 5px;
+        height: 44px;
         width: 150px;
-        flex: 0 0 150px;
     }
-    .genre-controls .dropdown {
+
+    .time-toggle-row > * {
         flex: 1;
+        min-width: 0;
+        height: 42px;
+        box-sizing: border-box;
     }
+
+    .watched-toggle {
+        margin: 5px;
+        padding: 10px;
+        line-height: 1;
+        text-align: center;
+    }
+
 }
