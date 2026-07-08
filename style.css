@@ -423,7 +423,87 @@ button {
     font-size: 16px !important;
 }
 
+
+.genre-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#addGenreButton {
+    height: 42px;
+}
+
+.custom-genre-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f5f5;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.delete-custom-genre-button {
+    margin-left: auto;
+
+    border: none;
+    background: transparent;
+
+    color: #c62828;
+    cursor: pointer;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    padding: 0 6px;
+}
+
+.genre-name {
+    flex: 1;
+}
+
 @media (max-width: 768px) {
+
+    #customGenreList {
+        margin-top: 15px;
+        max-height: 220px;
+    }
+
+    #newGenreName {
+        margin-bottom: 15px;
+    }
+
+    .delete-custom-genre-button {
+        font-size: 24px;
+        padding: 8px 12px;
+    }
+
+    .custom-genre-row {
+        padding: 12px;
+        border-radius: 8px;
+        background: #f5f5f5;
+        margin-bottom: 8px;
+    }
+
+
+    .edit-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .edit-actions button {
+        flex: 1;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: none;
+    }
 
     body {
         margin: 20px;
@@ -454,11 +534,15 @@ button {
         width: 100%;
     }
 
-    input:not([type="checkbox"]),
-    button {
-        width: 100%;
-        box-sizing: border-box;
-    }
+input:not([type="checkbox"]) {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button:not(#addGenreButton) {
+    width: 100%;
+    box-sizing: border-box;
+}
 
     #genreButton,
     #filterGenreButton,
@@ -514,5 +598,27 @@ button {
     .watched-toggle input[type="checkbox"] {
         width: auto;
         flex: 0 0 auto;
-}
+    }
+    .delete-custom-genre-button {
+        width: auto !important;
+        margin-left: auto;
+        flex: 0 0 auto;
+    }
+    .genre-controls {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+    }
+
+    #genreButton {
+        width: auto;
+    }
+
+    #addGenreButton {
+        width: 150px;
+        flex: 0 0 150px;
+    }
+    .genre-controls .dropdown {
+        flex: 1;
+    }
 }

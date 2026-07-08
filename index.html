@@ -64,13 +64,21 @@
 
         </div>
 
-        <div class="dropdown">
+        <div class="genre-controls">
 
-            <button id="genreButton" type="button">
-                Select Genres ▼
+            <div class="dropdown">
+
+                <button id="genreButton" type="button">
+                    Select Genres ▼
+                </button>
+
+                <div id="genreContainer" class="dropdown-content"></div>
+
+            </div>
+
+            <button id="addGenreButton" type="button">
+                Custom Genres
             </button>
-
-            <div id="genreContainer" class="dropdown-content"></div>
 
         </div>
 
@@ -205,6 +213,35 @@
         </div>
     </div>
 
+    <div id="genreModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <h2>Add Genre</h2>
+
+            <input
+                type="text"
+                id="newGenreName"
+                placeholder="Genre name">
+
+            <div class="edit-actions">
+                <button id="confirmGenreButton">
+                    Add Genre
+                </button>
+
+                <button id="cancelGenreButton">
+                    Cancel
+                </button>
+            </div>
+            <hr>
+
+            <h3>Custom Genres</h3>
+
+            <div id="customGenreList"></div>
+
+        </div>
+
+    </div>
 
 </div>
 

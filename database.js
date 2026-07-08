@@ -103,3 +103,52 @@ async function getUserTable(userId) {
 
     return data.table_name;
 }
+
+async function getCustomGenresFromDatabase() {
+    const genreTableName = TABLE_NAME + "_Genre";
+
+    const { data, error } = await supabaseClient
+        .from(genreTableName)
+        .select("Id, Genre")
+        .order("Genre", { ascending: true });
+
+    if (error) {
+        console.error("Error loading custom genres:", error);
+        return [];
+    }
+
+    return data;
+}
+
+async function addCustomGenreToDatabase(genreName) {
+    const genreTableName = TABLE_NAME + "_Genre";
+
+    const { error } = await supabaseClient
+        .from(genreTableName)
+        .insert([{ Genre: genreName }]);
+
+    if (error) {
+        console.error("Error adding custom genre:", error);
+        alert("Could not add genre.");
+        return false;
+    }
+
+    return true;
+}
+
+async function deleteCustomGenreFromDatabase(id) {
+    const genreTableName = TABLE_NAME + "_Genre";
+
+    const { error } = await supabaseClient
+        .from(genreTableName)
+        .delete()
+        .eq("Id", Number(id));
+
+    if (error) {
+        console.error("Error deleting custom genre:", error);
+        alert("Could not delete genre.");
+        return false;
+    }
+
+    return true;
+}

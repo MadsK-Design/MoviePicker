@@ -1,4 +1,4 @@
-const genres = [
+const defaultGenres = [
     "Action",
     "Adventure",
     "Animation",
@@ -14,6 +14,8 @@ const genres = [
     "Sci-Fi",
     "Thriller"
 ];
+let genres = [];
+let customGenres = [];
 
 let movieBeingEditedId = null;
 
@@ -42,6 +44,11 @@ const editMovieMinutes = document.getElementById("editMovieMinutes");
 const editGenreContainer = document.getElementById("editGenreContainer");
 const saveEditButton = document.getElementById("saveEditButton");
 const cancelEditButton = document.getElementById("cancelEditButton");
+const addGenreButton = document.getElementById("addGenreButton");
+const genreModal = document.getElementById("genreModal");
+const newGenreName = document.getElementById("newGenreName");
+const confirmGenreButton = document.getElementById("confirmGenreButton");
+const cancelGenreButton = document.getElementById("cancelGenreButton");
 
 function loadGenres() {
     genres.forEach(genre => {
@@ -471,6 +478,93 @@ async function saveEditedMovie() {
     }
 }
 
+async function loadAllGenres() {
+    customGenres = await getCustomGenresFromDatabase();
+
+    const customGenreNames = customGenres.map(item => item.Genre);
+
+    genres = [...defaultGenres, ...customGenreNames];
+
+    genreContainer.innerHTML = "";
+    filterGenreContainer.innerHTML = "";
+    listFilterGenreContainer.innerHTML = "";
+    editGenreContainer.innerHTML = "";
+
+    loadGenres();
+    loadFilterGenres();
+    loadListFilterGenres();
+    loadEditGenres();
+
+    updateGenreButtonText();
+    updateFilterGenreButtonText();
+    updateListFilterGenreButtonText();
+
+    renderCustomGenresInModal();
+}
+
+function renderCustomGenresInModal() {
+    const customGenreList = document.getElementById("customGenreList");
+
+    customGenreList.innerHTML = "";
+
+    if (customGenres.length === 0) {
+        customGenreList.innerHTML = "<p>No custom genres added.</p>";
+        return;
+    }
+
+    customGenres.forEach(genre => {
+        const row = document.createElement("div");
+        row.classList.add("custom-genre-row");
+
+        row.innerHTML = `
+            <span class="genre-name">${genre.Genre}</span>
+
+            <button
+                class="delete-custom-genre-button"
+                data-id="${genre.Id}">
+                ✕
+            </button>
+`;
+
+        customGenreList.appendChild(row);
+    });
+}
+
+function openGenreModal() {
+    newGenreName.value = "";
+    genreModal.classList.remove("hidden");
+    newGenreName.focus();
+}
+
+function closeGenreModal() {
+    genreModal.classList.add("hidden");
+}
+
+async function saveNewGenre() {
+    const genreName = newGenreName.value.trim();
+
+    if (genreName === "") {
+        alert("Please enter a genre name.");
+        return;
+    }
+
+    const genreExists = genres.some(
+        genre => genre.toLowerCase() === genreName.toLowerCase()
+    );
+
+    if (genreExists) {
+        alert("This genre already exists.");
+        return;
+    }
+
+    const success = await addCustomGenreToDatabase(genreName);
+
+    if (success) {
+        closeGenreModal();
+        await loadAllGenres();
+    }
+}
+
 
 
 
@@ -491,8 +585,30 @@ saveEditButton.addEventListener("click", saveEditedMovie);
 
 cancelEditButton.addEventListener("click", closeEditModal);
 
+addGenreButton.addEventListener("click", openGenreModal);
+confirmGenreButton.addEventListener("click", saveNewGenre);
+cancelGenreButton.addEventListener("click", closeGenreModal);
 
 
+
+
+genreModal.addEventListener("click", async event => {
+    if (event.target.classList.contains("delete-custom-genre-button")) {
+        const id = event.target.dataset.id;
+
+        const success = await deleteCustomGenreFromDatabase(id);
+
+        if (success) {
+            await loadAllGenres();
+        }
+    }
+});
+
+newGenreName.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        saveNewGenre();
+    }
+});
 
 movieList.addEventListener("click", async event => {
     if (event.target.classList.contains("movie-menu-button")) {
@@ -627,10 +743,13 @@ editModal.addEventListener("keydown", event => {
 
 //loadMovies();
 
-loadGenres();
+loadAllGenres();
+
+/*
 updateGenreButtonText();
 loadFilterGenres();
 updateFilterGenreButtonText();
 loadListFilterGenres();
 updateListFilterGenreButtonText();
 loadEditGenres();
+*/
