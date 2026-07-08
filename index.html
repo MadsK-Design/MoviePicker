@@ -12,7 +12,7 @@
 <body>
 <div id="login">
 
-    <h1>🎬 Movie Picker</h1>
+    <h1>Movie Picker</h1>
 
     <input
         type="text"
@@ -165,9 +165,9 @@
     <div class="list-filters">
 
         <input
-        type="text"
-        id="movieSearch"
-        placeholder="Search movies...">
+            type="text"
+            id="movieSearch"
+            placeholder="Search movies...">
 
         <div class="dropdown">
             <button id="listFilterGenreButton" type="button">
@@ -177,7 +177,8 @@
             <div id="listFilterGenreContainer" class="dropdown-content"></div>
         </div>
 
-        <div class="list-filter-time-inputs">
+        <div class="time-toggle-row">
+
             <input
                 type="number"
                 id="listFilterHours"
@@ -190,17 +191,19 @@
                 placeholder="Max Min"
                 min="0"
                 max="59">
-        </div>
 
-        <label class="watched-toggle">
-            <input
-                type="checkbox"
-                id="showWatched">
+            <label class="watched-toggle">
+                <input
+                    type="checkbox"
+                    id="showWatched">
 
                 Show Watched
-        </label>
+            </label>
+
+        </div>
 
     </div>
+
 </div>
 
         <h2>Movies</h2>

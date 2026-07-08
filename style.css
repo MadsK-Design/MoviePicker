@@ -132,11 +132,33 @@ summary {
 }
 
 .movie-menu-button {
-    border: none;
     background: transparent;
-    font-size: 22px;
+    border: none;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 0;
+    margin: 0;
+
+    font-size: 32px;
+    line-height: 1;
+
+    color: #444;
     cursor: pointer;
-    padding: 4px 8px;
+}
+
+.movie-menu-button:hover {
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+.movie-menu-button:active {
+    background: #e5e7eb;
 }
 
 .movie-menu-content {
@@ -297,17 +319,18 @@ summary {
 .watched-tag {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 
-    margin-top: 8px;
-    padding: 4px 8px;
+    margin: 6px 0 10px;
+
+    padding: 3px 8px;
 
     background: #e8f5e9;
-    color: #2e7d32;
-
     border-radius: 999px;
 
-    font-size: 13px;
+    color: #2e7d32;
+
+    font-size: 11px;
     font-weight: 600;
 }
 
@@ -737,6 +760,11 @@ button {
 
     outline: none;
 }
+
+#app {
+    min-height: 100vh;
+}
+
 
 @media (max-width: 768px) {
 
