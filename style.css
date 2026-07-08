@@ -729,6 +729,15 @@ button {
     transform: scale(.98);
 }
 
+button {
+    -webkit-appearance: none;
+    appearance: none;
+
+    -webkit-tap-highlight-color: transparent;
+
+    outline: none;
+}
+
 @media (max-width: 768px) {
 
     #customGenreList {
