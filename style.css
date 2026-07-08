@@ -163,15 +163,29 @@ summary {
 
 .movie-menu-content {
     display: none;
+
     position: absolute;
+    top: 40px;
     right: 0;
-    top: 35px;
+
+    flex-direction: column;
+    gap: 8px;
+
+    width: 160px;
+
+    padding: 6px;
+
     background: white;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    min-width: 120px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10;
+    border-radius: 10px;
+
+    box-shadow: 0 6px 16px rgba(0,0,0,.18);
+
+    z-index: 100;
+}
+
+.movie-menu-content.show {
+    display: flex;
 }
 
 .movie-menu-content.show {
@@ -195,23 +209,29 @@ summary {
     transition: background .2s ease;
 }
 
-.movie-menu-content {
-    display: none;
 
-    flex-direction: column;
-    gap: 2px;
-
-    padding: 6px;
-
-    background: white;
-
-    border-radius: 10px;
-
-    min-width: 170px;
-}
 
 .movie-menu-content.show {
     display: flex;
+}
+
+.edit-movie-button,
+.mark-watched-button,
+.delete-movie-button {
+    width: calc(100% - 16px);
+    margin: 0 auto;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #f8f8f8;
+
+    text-align: center;
+
+    font-size: 15px;
+    font-weight: 500;
 }
 
 .edit-movie-button {
@@ -224,6 +244,18 @@ summary {
 
 .delete-movie-button {
     color: #c62828;
+}
+
+.edit-movie-button:hover {
+    background: #eeeeee;
+}
+
+.mark-watched-button:hover {
+    background: #e8f5e9;
+}
+
+.delete-movie-button:hover {
+    background: #fdeaea;
 }
 
 .movie-menu-content button:hover {
@@ -973,5 +1005,7 @@ button {
         line-height: 1;
         text-align: center;
     }
+
+
 
 }
