@@ -433,6 +433,7 @@ summary {
     font-weight: 600;
     border-radius: 10px;
     background: #cf2828;
+    color: white;
 }
 
 #logoutButton:hover {
