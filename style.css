@@ -628,6 +628,12 @@ button {
     width: 100%;
 }
 
+.time-toggle-row input {
+    margin: 0;
+    height: 44px;
+    box-sizing: border-box;
+}
+
 .time-toggle-row input,
 .time-toggle-row .watched-toggle {
     flex: 1;
@@ -1096,12 +1102,15 @@ button {
     }
 
     .watched-toggle {
-        margin: 5px;
+        margin: 0;
         padding: 10px;
         line-height: 1;
         text-align: center;
     }
 
+    .list-filters .time-toggle-row {
+        width: 100%;
+    }
 
 
 }
