@@ -153,12 +153,26 @@
 
 
 
-<button
-    id="toggleFiltersButton"
-    type="button"
-    class="filter-toggle-button">
-        Show Filters
-</button>
+<div class="filter-header">
+
+    <button
+        id="toggleFiltersButton"
+        type="button"
+        class="filter-toggle-button">
+        Find Movies
+    </button>
+
+    <label class="filter-watched-toggle">
+        <input
+            type="checkbox"
+            id="showWatched">
+        <span id="showWatchedText">
+            Show Watched    
+        </span>
+        
+    </label>
+
+</div>
 
 <div id="filterSection" class="hidden-filter-section">
 
@@ -192,13 +206,6 @@
                 min="0"
                 max="59">
 
-            <label class="watched-toggle">
-                <input
-                    type="checkbox"
-                    id="showWatched">
-
-                Show Watched
-            </label>
 
         </div>
 

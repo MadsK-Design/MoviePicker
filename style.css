@@ -797,8 +797,65 @@ button {
     min-height: 100vh;
 }
 
+.filter-header {
+    display: flex;
+    gap: 10px;
+    margin: 18px 0 15px;
+}
+
+.filter-toggle-button,
+.filter-watched-toggle {
+    flex: 1;
+    height: 44px;
+
+    margin: 0;
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+
+    background: white;
+    color: #222;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filter-watched-toggle input {
+    display: none;
+}
+
+.filter-watched-toggle:has(input:checked) {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+.filter-toggle-button.active-filter {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
 
 @media (max-width: 768px) {
+
+    .filter-header {
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-toggle-button,
+    .filter-watched-toggle {
+        flex: 1;
+        margin: 0;
+    }
 
     #customGenreList {
         margin-top: 15px;
@@ -986,11 +1043,6 @@ button {
         height: 44px;
     }
 
-    .filter-toggle-button {
-        margin-left: 5px;
-        height: 44px;
-        width: 150px;
-    }
 
     .time-toggle-row > * {
         flex: 1;

@@ -56,6 +56,7 @@ const addSection = document.getElementById("addSection");
 const pickSection = document.getElementById("pickSection");
 const toggleFiltersButton = document.getElementById("toggleFiltersButton");
 const filterSection = document.getElementById("filterSection");
+const showWatchedText = document.getElementById("showWatchedText");
 
 
 function loadGenres() {
@@ -599,8 +600,6 @@ addMovieButton.addEventListener("click", addMovie);
 
 randomMovieButton.addEventListener("click", pickRandomMovie);
 
-showWatchedCheckbox.addEventListener("change", renderMovies);
-
 saveEditButton.addEventListener("click", saveEditedMovie);
 
 cancelEditButton.addEventListener("click", closeEditModal);
@@ -611,6 +610,16 @@ cancelGenreButton.addEventListener("click", closeGenreModal);
 
 movieSearch.addEventListener("input", renderMovies);
 
+
+showWatchedCheckbox.addEventListener("change", () => {
+
+    showWatchedText.textContent = showWatchedCheckbox.checked
+        ? "Hide Watched"
+        : "Show Watched";
+
+    renderMovies();
+
+});
 
 genreModal.addEventListener("click", async event => {
     if (event.target.classList.contains("delete-custom-genre-button")) {
@@ -789,9 +798,9 @@ toggleFiltersButton.addEventListener("click", () => {
     toggleFiltersButton.classList.toggle("active-filter");
 
     if (filterSection.classList.contains("show-filter-section")) {
-        toggleFiltersButton.textContent = "Hide Filters";
+        toggleFiltersButton.textContent = "Hide Filter";
     } else {
-        toggleFiltersButton.textContent = "Show Filters";
+        toggleFiltersButton.textContent = "Finde Movies";
     }
 
 });
