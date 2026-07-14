@@ -152,3 +152,123 @@ async function deleteCustomGenreFromDatabase(id) {
 
     return true;
 }
+
+async function getMovieListsFromDatabase() {
+    if (!TABLE_NAME) {
+        return [];
+    }
+
+    const listTableName = `${TABLE_NAME}_Lists`;
+
+    const { data, error } = await supabaseClient
+        .from(listTableName)
+        .select("*")
+        .order("Lists", { ascending: true });
+
+    if (error) {
+        console.error("Error loading movie lists:", error);
+        return [];
+    }
+
+    return data || [];
+}
+
+async function addMovieListToDatabase(listName, tagName) {
+
+    if (!TABLE_NAME) {
+        console.error("No movie table selected.");
+        return false;
+    }
+
+    const listTableName = `${TABLE_NAME}_Lists`;
+
+    const { error } = await supabaseClient
+        .from(listTableName)
+        .insert({
+            Lists: listName,
+            Tag: tagName
+        });
+
+    if (error) {
+        console.error("Error creating movie list:", error);
+        return false;
+    }
+
+    return true;
+}
+
+async function deleteMovieListFromDatabase(id) {
+    if (!TABLE_NAME) {
+        return false;
+    }
+
+    const listTableName = `${TABLE_NAME}_Lists`;
+
+    const { error } = await supabaseClient
+        .from(listTableName)
+        .delete()
+        .eq("Id", Number(id));
+
+    if (error) {
+        console.error("Error deleting movie list:", error);
+        alert("Could not delete the movie list.");
+        return false;
+    }
+
+    return true;
+}
+
+async function removeListFromAllMovies(listName) {
+    const { data, error } = await supabaseClient
+        .from(TABLE_NAME)
+        .select("Id, Lists");
+
+    if (error) {
+        console.error("Error loading movies for list cleanup:", error);
+        return false;
+    }
+
+    const affectedMovies = (data || []).filter(movie =>
+        Array.isArray(movie.Lists) &&
+        movie.Lists.includes(listName)
+    );
+
+    for (const movie of affectedMovies) {
+        const updatedLists = movie.Lists.filter(
+            list => list !== listName
+        );
+
+        const { error: updateError } = await supabaseClient
+            .from(TABLE_NAME)
+            .update({ Lists: updatedLists })
+            .eq("Id", movie.Id);
+
+        if (updateError) {
+            console.error(
+                `Error removing list from movie ${movie.Id}:`,
+                updateError
+            );
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
+async function updateMovieListsInDatabase(id, lists) {
+    const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .update({
+            Lists: lists
+        })
+        .eq("Id", Number(id));
+
+    if (error) {
+        console.error("Error updating movie lists:", error);
+        alert("Could not update movie lists.");
+        return false;
+    }
+
+    return true;
+}

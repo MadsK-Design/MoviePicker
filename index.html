@@ -88,9 +88,18 @@
 
             </div>
 
-            <button id="addGenreButton" type="button">
-                Add/Edit Custom Genres
-            </button>
+
+            <div class="add-extra-buttons">
+
+                <button id="addGenreButton" type="button">
+                    Add/Edit Custom Genres
+                </button>
+
+                <button id="selectListsForNewMovieButton" type="button">
+                    Lists
+                </button>
+
+            </div>
 
             <button id="addMovie">
                 Add Movie
@@ -211,9 +220,30 @@
 
     </div>
 
-</div>
+    </div>
+
+            <div class="movie-list-controls">
+
+        <div class="movie-list-top-row">
+            <button
+                id="addMovieListButton"
+                type="button"
+                aria-label="Add new movie list">
+                +
+            </button>
+        </div>
+
+        <div id="movieListButtons" class="movie-list-buttons">
+
+        </div>
+
+    </div>
 
         <h2>Movies</h2>
+
+        <p id="currentMovieList">
+            Showing: <em>All</em>
+        </p>
 
         <div id="movieList"></div>
 
@@ -252,6 +282,43 @@
         </div>
     </div>
 
+    <div id="movieListModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <h2>Create Movie List</h2>
+
+            <input
+                type="text"
+                id="newMovieListName"
+                placeholder="List name">
+
+            <input
+                type="text"
+                id="newMovieListTag"
+                placeholder="Button tag (max 12 characters)"
+                maxlength="12">
+
+            <div class="edit-actions">
+
+                <button
+                    id="confirmMovieListButton"
+                    type="button">
+                    Create List
+                </button>
+
+                <button
+                    id="cancelMovieListButton"
+                    type="button">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
     <div id="genreModal" class="modal hidden">
 
         <div class="modal-content">
@@ -281,6 +348,34 @@
         </div>
 
     </div>
+
+
+    <div id="addToListModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <h2>Add Movie to Lists</h2>
+
+            <div id="addToListOptions" class="edit-genre-container"></div>
+
+            <div class="edit-actions">
+
+                <button id="saveMovieListsButton" type="button">
+                    Save
+                </button>
+
+                <button id="cancelAddToListButton" type="button">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
 
 </div>
 

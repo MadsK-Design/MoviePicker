@@ -41,7 +41,9 @@ async function loginUser() {
     loginSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
+
     await loadAllGenres();
+    await loadMovieLists();
     await loadMovies();
 }
 
@@ -90,6 +92,7 @@ async function checkExistingSession() {
     appSection.classList.remove("hidden");
 
     await loadAllGenres();
+    await loadMovieLists();
     await loadMovies();
 }
 

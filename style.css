@@ -225,6 +225,7 @@ summary {
 }
 
 .edit-movie-button,
+.add-to-list-button,
 .mark-watched-button,
 .delete-movie-button {
     width: calc(100% - 16px);
@@ -243,8 +244,13 @@ summary {
     font-weight: 500;
 }
 
+
 .edit-movie-button {
     color: #222;
+}
+
+.add-to-list-button {
+    color: #2563eb;
 }
 
 .mark-watched-button {
@@ -524,10 +530,6 @@ button {
 
 #genreButton {
     width: 100%;
-}
-
-#addGenreButton {
-    flex: 1;
 }
 
 .custom-genre-row {
@@ -893,8 +895,209 @@ button {
     color: #9ca3af;
 }
 
+.movie-list-controls {
+    margin: 28px 0 18px;
+}
+
+.movie-list-top-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+#addMovieListButton {
+    width: 40px;
+    height: 40px;
+
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+
+    background: white;
+    color: #222;
+
+    font-size: 24px !important;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.movie-list-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.movie-list-button {
+    min-width: 90px;
+    height: 42px;
+
+    margin: 0;
+    padding: 0 16px;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+
+    background: white;
+    color: #222;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.movie-list-button.active-movie-list {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+#currentMovieList {
+    margin-top: -10px;
+    margin-bottom: 20px;
+
+    color: #777;
+
+    font-size: 14px;
+    font-style: italic;
+}
+
+.movie-list-button-wrapper {
+    position: relative;
+
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+}
+
+.movie-list-button-wrapper .movie-list-button {
+    width: 100%;
+    padding-right: 28px;
+}
+
+.delete-movie-list-button {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+
+    width: 24px;
+    height: 24px;
+
+    margin: 0;
+    padding: 0;
+
+    transform: translateY(-50%);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+    color: #c62828;
+
+    font-size: 18px !important;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.delete-movie-list-button:active {
+    background: #fdeaea;
+}
+
+
+.add-extra-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.add-extra-buttons #addGenreButton {
+    width: 70%;
+    flex: 0 0 70%;
+    height: 42px;
+    margin: 0;
+}
+
+.add-extra-buttons #selectListsForNewMovieButton {
+    width: auto;
+    flex: 1;
+    min-width: 75px;
+    height: 42px;
+    margin: 0;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    background: #f3f4f6;
+    color: #374151;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+
+
+#selectListsForNewMovieButton {
+    flex: 1;
+
+    height: 42px;
+    margin: 0;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    background: #f3f4f6;
+    color: #374151;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+
+#addGenreButton {
+    flex: 2;
+    width: auto;
+}
+
+#selectListsForNewMovieButton {
+    flex: 1;
+    width: auto;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    background: #f3f4f6;
+    color: #374151;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
 
 @media (max-width: 768px) {
+
+    .movie-list-controls {
+        margin-top: 26px;
+    }
+
+    .movie-list-button-wrapper,
+    .movie-list-buttons > .movie-list-button {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 0;
+    }
 
     .filter-header {
         display: flex;
@@ -977,10 +1180,10 @@ button {
         box-sizing: border-box;
     }
 
-    button:not(#addGenreButton):not(#logoutButton):not(#toggleFiltersButton) {
-        width: 100%;
-        box-sizing: border-box;
-    }
+button:not(#addGenreButton):not(#logoutButton):not(#toggleFiltersButton):not(.delete-movie-list-button):not(#selectListsForNewMovieButton):not(#addMovieListButton) {
+    width: 100%;
+    box-sizing: border-box;
+}
 
     #genreButton,
     #filterGenreButton,
@@ -1079,11 +1282,25 @@ button {
         width: auto;
     }
 
-    #addGenreButton {
-        width: 70%;
-        height: 42px;
-        flex: none;
+    .add-extra-buttons {
+        flex-direction: row;
     }
+
+    .add-extra-buttons {
+        flex-direction: row;
+    }
+
+    .add-extra-buttons #addGenreButton {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+    }
+
+    .add-extra-buttons #selectListsForNewMovieButton {
+        flex: 0 0 80px;
+        width: 80px;
+    }
+
 
     .action-tabs {
         margin-top: 28px;

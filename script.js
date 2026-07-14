@@ -16,10 +16,17 @@ const defaultGenres = [
 ];
 let genres = [];
 let customGenres = [];
-
 let movieBeingEditedId = null;
-
 let movies = [];
+let movieLists = [];
+let selectedMovieList = "All";
+let movieBeingAddedToListsId = null;
+let selectedListsForNewMovie = [];
+let addToListMode = "existing";
+
+
+
+
 
 const genreContainer = document.getElementById("genreContainer");
 const movieList = document.getElementById("movieList");
@@ -57,6 +64,21 @@ const pickSection = document.getElementById("pickSection");
 const toggleFiltersButton = document.getElementById("toggleFiltersButton");
 const filterSection = document.getElementById("filterSection");
 const showWatchedText = document.getElementById("showWatchedText");
+const addMovieListButton = document.getElementById("addMovieListButton");
+const movieListButtons = document.getElementById("movieListButtons");
+const movieListModal = document.getElementById("movieListModal");
+const newMovieListName = document.getElementById("newMovieListName");
+const newMovieListTag = document.getElementById("newMovieListTag");
+const confirmMovieListButton = document.getElementById("confirmMovieListButton");
+const cancelMovieListButton = document.getElementById("cancelMovieListButton");
+const currentMovieList = document.getElementById("currentMovieList");
+const addToListModal = document.getElementById("addToListModal");
+const addToListOptions = document.getElementById("addToListOptions");
+const saveMovieListsButton = document.getElementById("saveMovieListsButton");
+const cancelAddToListButton = document.getElementById("cancelAddToListButton");
+const selectListsForNewMovieButton = document.getElementById("selectListsForNewMovieButton");
+
+
 
 
 function loadGenres() {
@@ -127,7 +149,8 @@ async function addMovie() {
         Name: name,
         Time: time,
         Genre: selectedGenres.join(","),
-        Watched: false
+        Watched: false,
+        Lists: selectedListsForNewMovie
     };
 
     const success = await addMovieToDatabase(movie);
@@ -177,6 +200,10 @@ function renderMovies() {
 
                         <button class="edit-movie-button" data-id="${movie.Id}">
                             Edit
+                        </button>
+
+                        <button class="add-to-list-button" data-id="${movie.Id}">
+                            Add to List
                         </button>
 
                         <button class="mark-watched-button" data-id="${movie.Id}">
@@ -254,6 +281,16 @@ function pickRandomMovie() {
         availableMovies = [...movies];
     } else {
         availableMovies = movies.filter(movie => movie.Watched === false);
+    }
+
+    if (selectedMovieList !== "All") {
+        availableMovies = availableMovies.filter(movie => {
+            const assignedLists = Array.isArray(movie.Lists)
+                ? movie.Lists
+                : [];
+
+        return assignedLists.includes(selectedMovieList);
+    });
     }
 
     if (selectedFilterGenres.length > 0) {
@@ -411,6 +448,16 @@ function getFilteredMoviesForList() {
     // ⏱ Runtime filter
     if (maxRuntime > 0) {
         filteredMovies = filteredMovies.filter(movie => movie.Time <= maxRuntime);
+    }
+
+    if (selectedMovieList !== "All") {
+        filteredMovies = filteredMovies.filter(movie => {
+            const assignedLists = Array.isArray(movie.Lists)
+                ? movie.Lists
+                : [];
+
+            return assignedLists.includes(selectedMovieList);
+        });
     }
 
     return filteredMovies;
@@ -586,6 +633,233 @@ async function saveNewGenre() {
     }
 }
 
+async function loadMovieLists() {
+    movieLists = await getMovieListsFromDatabase();
+
+    const selectedStillExists =
+        selectedMovieList === "All" ||
+        movieLists.some(list => list.Lists === selectedMovieList);
+
+    if (!selectedStillExists) {
+        selectedMovieList = "All";
+    }
+
+    renderMovieListButtons();
+}
+
+function renderMovieListButtons() {
+    movieListButtons.innerHTML = "";
+
+    const allButton = document.createElement("button");
+
+    allButton.type = "button";
+    allButton.classList.add("movie-list-button");
+    allButton.dataset.list = "All";
+    allButton.textContent = "All";
+
+    if (selectedMovieList === "All") {
+        allButton.classList.add("active-movie-list");
+    }
+
+    movieListButtons.appendChild(allButton);
+
+    movieLists.forEach(list => {
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("movie-list-button-wrapper");
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.classList.add("movie-list-button");
+        button.dataset.list = list.Lists;
+        button.textContent = list.Tag;
+
+        if (selectedMovieList === list.Lists) {
+            button.classList.add("active-movie-list");
+        }
+
+        const deleteButton = document.createElement("button");
+
+        deleteButton.type = "button";
+        deleteButton.classList.add("delete-movie-list-button");
+        deleteButton.dataset.id = list.Id;
+        deleteButton.dataset.name = list.Lists;
+        deleteButton.textContent = "×";
+        deleteButton.setAttribute(
+            "aria-label",
+            `Delete ${list.Lists}`
+        );
+
+        wrapper.appendChild(button);
+        wrapper.appendChild(deleteButton);
+
+        movieListButtons.appendChild(wrapper);
+    });
+}
+
+function openMovieListModal() {
+
+    newMovieListName.value = "";
+    newMovieListTag.value = "";
+
+    movieListModal.classList.remove("hidden");
+}
+
+function closeMovieListModal() {
+    movieListModal.classList.add("hidden");
+}
+
+async function saveNewMovieList() {
+
+    const listName = newMovieListName.value.trim();
+    let tagName = newMovieListTag.value.trim();
+
+    if (listName === "") {
+        alert("Please enter a list name.");
+        return;
+    }
+
+    if (tagName === "") {
+        tagName = listName.substring(0, 12);
+    }
+
+    if (tagName.length > 12) {
+        alert("Button tag can only contain 12 characters.");
+        return;
+    }
+
+    if (listName.toLowerCase() === "all") {
+        alert('"All" is reserved.');
+        return;
+    }
+
+    const exists = movieLists.some(list =>
+        list.Lists.toLowerCase() === listName.toLowerCase()
+    );
+
+    if (exists) {
+        alert("List already exists.");
+        return;
+    }
+
+    const success =
+        await addMovieListToDatabase(listName, tagName);
+
+    if (!success) {
+        alert("Could not create list.");
+        return;
+    }
+
+    closeMovieListModal();
+
+    await loadMovieLists();
+}
+
+function openAddToListModal(movie) {
+    movieBeingAddedToListsId = movie.Id;
+
+    const assignedLists = Array.isArray(movie.Lists)
+        ? movie.Lists
+        : [];
+
+    addToListOptions.innerHTML = "";
+
+    if (movieLists.length === 0) {
+        addToListOptions.innerHTML =
+            "<p>No movie lists have been created.</p>";
+    } else {
+        movieLists.forEach(list => {
+            const label = document.createElement("label");
+
+            const isChecked = assignedLists.includes(list.Lists);
+
+            label.innerHTML = `
+                <input
+                    type="checkbox"
+                    value="${list.Lists}"
+                    ${isChecked ? "checked" : ""}>
+
+                ${list.Lists}
+            `;
+
+            addToListOptions.appendChild(label);
+        });
+    }
+
+    addToListModal.classList.remove("hidden");
+}
+
+function closeAddToListModal() {
+    addToListModal.classList.add("hidden");
+    movieBeingAddedToListsId = null;
+}
+
+async function saveMovieLists() {
+    const selectedLists = [
+        ...document.querySelectorAll(
+            "#addToListOptions input:checked"
+        )
+    ].map(input => input.value);
+
+    if (addToListMode === "new") {
+        selectedListsForNewMovie = selectedLists;
+
+        closeAddToListModal();
+        return;
+    }
+
+    if (movieBeingAddedToListsId === null) {
+        return;
+    }
+
+    const success = await updateMovieListsInDatabase(
+        movieBeingAddedToListsId,
+        selectedLists
+    );
+
+    if (!success) {
+        return;
+    }
+
+    closeAddToListModal();
+    await loadMovies();
+}
+
+function renderListOptions(selectedLists = []) {
+    addToListOptions.innerHTML = "";
+
+    if (movieLists.length === 0) {
+        addToListOptions.innerHTML =
+            "<p>No movie lists have been created.</p>";
+        return;
+    }
+
+    movieLists.forEach(list => {
+        const label = document.createElement("label");
+
+        const isChecked = selectedLists.includes(list.Lists);
+
+        label.innerHTML = `
+            <input
+                type="checkbox"
+                value="${list.Lists}"
+                ${isChecked ? "checked" : ""}>
+
+            ${list.Lists}
+        `;
+
+        addToListOptions.appendChild(label);
+    });
+}
+
+function openListsForNewMovieModal() {
+    addToListMode = "new";
+    movieBeingAddedToListsId = null;
+
+    renderListOptions(selectedListsForNewMovie);
+
+    addToListModal.classList.remove("hidden");
+}
 
 
 
@@ -640,6 +914,7 @@ newGenreName.addEventListener("keydown", event => {
 });
 
 movieList.addEventListener("click", async event => {
+
     if (event.target.classList.contains("movie-menu-button")) {
         const menu = event.target.nextElementSibling;
         const isOpen = menu.classList.contains("show");
@@ -655,16 +930,29 @@ movieList.addEventListener("click", async event => {
     }
 
     if (event.target.classList.contains("edit-movie-button")) {
-    const id = Number(event.target.dataset.id);
-    const movie = movies.find(movie => movie.Id === id);
+        const id = Number(event.target.dataset.id);
+        const movie = movies.find(movie => movie.Id === id);
 
-    if (!movie) {
-        alert("Movie not found.");
+        if (!movie) {
+            alert("Movie not found.");
+            return;
+        }
+
+        openEditModal(movie);
         return;
     }
 
-    openEditModal(movie);
-    return;
+    if (event.target.classList.contains("add-to-list-button")) {
+        const id = Number(event.target.dataset.id);
+        const movie = movies.find(movie => movie.Id === id);
+
+        if (!movie) {
+            alert("Movie not found.");
+            return;
+        }
+
+        openAddToListModal(movie);
+        return;
     }
 
     if (event.target.classList.contains("mark-watched-button")) {
@@ -675,18 +963,20 @@ movieList.addEventListener("click", async event => {
         if (success) {
             await loadMovies();
         }
+
+        return;
     }
 
     if (event.target.classList.contains("remove-watched-button")) {
-    const id = event.target.dataset.id;
+        const id = event.target.dataset.id;
 
-    const success = await unmarkMovieAsWatched(id);
+        const success = await unmarkMovieAsWatched(id);
 
-    if (success) {
-        await loadMovies();
-    }
+        if (success) {
+            await loadMovies();
+        }
 
-    return;
+        return;
     }
 
     if (event.target.classList.contains("delete-movie-button")) {
@@ -704,8 +994,8 @@ movieList.addEventListener("click", async event => {
         }
 
         return;
-
     }
+
 });
 
 document.addEventListener("click", event => {
@@ -805,11 +1095,104 @@ toggleFiltersButton.addEventListener("click", () => {
 
 });
 
+addMovieListButton.addEventListener(
+    "click",
+    openMovieListModal
+);
+
+cancelMovieListButton.addEventListener(
+    "click",
+    closeMovieListModal
+);
+
+confirmMovieListButton.addEventListener(
+    "click",
+    saveNewMovieList
+);
+
+newMovieListName.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        saveNewMovieList();
+    }
+});
+
+movieListButtons.addEventListener("click", async event => {
+    const deleteButton = event.target.closest(
+        ".delete-movie-list-button"
+    );
+
+    if (deleteButton) {
+        const id = Number(deleteButton.dataset.id);
+        const listName = deleteButton.dataset.name;
+
+        const confirmed = confirm(
+            `Delete the list "${listName}"?\n\n` +
+            "The list will also be removed from all movies."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const removedFromMovies =
+            await removeListFromAllMovies(listName);
+
+        if (!removedFromMovies) {
+            alert("The list could not be removed from the movies.");
+            return;
+        }
+
+        const deleted =
+            await deleteMovieListFromDatabase(id);
+
+        if (!deleted) {
+            return;
+        }
+
+        if (selectedMovieList === listName) {
+            selectedMovieList = "All";
+        }
+
+        await loadMovieLists();
+        await loadMovies();
+
+        return;
+    }
+
+    const listButton = event.target.closest(".movie-list-button");
+
+    if (!listButton) {
+        return;
+    }
+
+    selectedMovieList = listButton.dataset.list;
+
+    currentMovieList.innerHTML =
+        `Current List: <em>${selectedMovieList}</em>`;
+
+    renderMovieListButtons();
+    renderMovies();
+});
+
+saveMovieListsButton.addEventListener(
+    "click",
+    saveMovieLists
+);
+
+cancelAddToListButton.addEventListener(
+    "click",
+    closeAddToListModal
+);
+
+selectListsForNewMovieButton.addEventListener(
+    "click",
+    openListsForNewMovieModal
+);
 
 
 //loadMovies();
 
-loadAllGenres();
+//loadAllGenres();
 
 /*
 updateGenreButtonText();
