@@ -1085,6 +1085,43 @@ button {
     cursor: pointer;
 }
 
+#createListFromAddMovieButton {
+    width: 100%;
+    height: 42px;
+    margin: 12px 0 0;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2563eb;
+    color: white;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#saveEditButton,
+#confirmGenreButton,
+#confirmMovieListButton,
+#saveMovieListsButton {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+
+
+#cancelEditButton,
+#cancelGenreButton,
+#cancelMovieListButton,
+#cancelAddToListButton {
+    background: #f3f4f6;
+    color: #374151;
+    border-radius: 10px;
+}
+
+
+
 
 
 @media (max-width: 768px) {
@@ -1180,10 +1217,10 @@ button {
         box-sizing: border-box;
     }
 
-button:not(#addGenreButton):not(#logoutButton):not(#toggleFiltersButton):not(.delete-movie-list-button):not(#selectListsForNewMovieButton):not(#addMovieListButton) {
-    width: 100%;
-    box-sizing: border-box;
-}
+    button:not(#addGenreButton):not(#logoutButton):not(#toggleFiltersButton):not(.delete-movie-list-button):not(#selectListsForNewMovieButton):not(#addMovieListButton) {
+        width: 100%;
+        box-sizing: border-box;
+    }
 
     #genreButton,
     #filterGenreButton,

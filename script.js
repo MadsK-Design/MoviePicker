@@ -81,6 +81,8 @@ const selectListsForNewMovieButton = document.getElementById("selectListsForNewM
 
 
 
+/* //Functions\\ */
+
 function loadGenres() {
     genres.forEach(genre => {
         const label = document.createElement("label");
@@ -826,30 +828,44 @@ async function saveMovieLists() {
 }
 
 function renderListOptions(selectedLists = []) {
+
     addToListOptions.innerHTML = "";
 
     if (movieLists.length === 0) {
         addToListOptions.innerHTML =
             "<p>No movie lists have been created.</p>";
-        return;
+    } else {
+
+        movieLists.forEach(list => {
+
+            const label = document.createElement("label");
+
+            const checked =
+                selectedLists.includes(list.Lists);
+
+            label.innerHTML = `
+                <input
+                    type="checkbox"
+                    value="${list.Lists}"
+                    ${checked ? "checked" : ""}>
+
+                ${list.Tag}
+            `;
+
+            addToListOptions.appendChild(label);
+
+        });
+
     }
 
-    movieLists.forEach(list => {
-        const label = document.createElement("label");
+    const createButton = document.createElement("button");
 
-        const isChecked = selectedLists.includes(list.Lists);
+    createButton.id = "createListFromAddMovieButton";
+    createButton.type = "button";
+    createButton.textContent = "Create New List";
 
-        label.innerHTML = `
-            <input
-                type="checkbox"
-                value="${list.Lists}"
-                ${isChecked ? "checked" : ""}>
+    addToListOptions.appendChild(createButton);
 
-            ${list.Lists}
-        `;
-
-        addToListOptions.appendChild(label);
-    });
 }
 
 function openListsForNewMovieModal() {
@@ -883,6 +899,17 @@ confirmGenreButton.addEventListener("click", saveNewGenre);
 cancelGenreButton.addEventListener("click", closeGenreModal);
 
 movieSearch.addEventListener("input", renderMovies);
+
+
+
+addToListOptions.addEventListener("click", event => {
+    if (event.target.id !== "createListFromAddMovieButton") {
+        return;
+    }
+
+    closeAddToListModal();
+    openMovieListModal();
+});
 
 
 showWatchedCheckbox.addEventListener("change", () => {
