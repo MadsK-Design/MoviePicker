@@ -1554,8 +1554,13 @@ button {
 
 .admin-user-header {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
+}
+
+/* The badge (Admin / Blocked) lines up with the name, not the label */
+.admin-user-header .admin-badge {
+    margin-bottom: 4px;
 }
 
 .admin-user-header h3 {
@@ -1928,9 +1933,19 @@ body:has(#admin:not(.hidden)) {
 #admin .admin-user-card:nth-child(4) { animation-delay: .3s; }
 #admin .admin-user-card:nth-child(n + 5) { animation-delay: .4s; }
 
-#admin .admin-user-card h3::before {
+/* The admin's own card keeps its "@admin" title */
+#admin .admin-self-card h3::before {
     content: "@";
     color: var(--hacker-dim);
+}
+
+/* ...and its badge sits centred next to the title */
+.admin-self-card .admin-user-header {
+    align-items: center;
+}
+
+.admin-self-card .admin-user-header .admin-badge {
+    margin-bottom: 0;
 }
 
 #admin .admin-user-card.blocked-user {
@@ -1945,14 +1960,17 @@ body:has(#admin:not(.hidden)) {
     text-transform: uppercase;
 }
 
-/* The password: a small label with the password in large text under it */
-.admin-password {
+/* User and password: a small label with the value in large text under it */
+.admin-info {
     display: flex;
     flex-direction: column;
+}
+
+.admin-user-header + .admin-info {
     margin-top: 8px;
 }
 
-.admin-password-label {
+.admin-info-label {
     color: #777;
     font-size: 11px;
     font-weight: 600;
@@ -1960,7 +1978,7 @@ body:has(#admin:not(.hidden)) {
     text-transform: uppercase;
 }
 
-.admin-password-value {
+.admin-info-value {
     margin-top: 2px;
     font-size: 20px;
     font-weight: 700;
@@ -1968,11 +1986,11 @@ body:has(#admin:not(.hidden)) {
     word-break: break-all;
 }
 
-#admin .admin-password-label {
+#admin .admin-info-label {
     color: var(--hacker-dim);
 }
 
-#admin .admin-password-value {
+#admin .admin-info-value {
     color: var(--hacker-green);
     text-shadow: 0 0 8px rgba(0, 255, 65, .7);
 }

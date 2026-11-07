@@ -335,14 +335,17 @@ function renderAdminUsers() {
         return `
             <div class="admin-user-card ${user.blocked ? "blocked-user" : ""}" data-uid="${user.uid}">
                 <div class="admin-user-header">
-                    <h3>${escapeHtml(user.username || user.uid)}</h3>
+                    <div class="admin-info">
+                        <span class="admin-info-label">User</span>
+                        <span class="admin-info-value">${escapeHtml(user.username || user.uid)}</span>
+                    </div>
                     ${user.blocked ? `<span class="admin-badge blocked">Blocked</span>` : ""}
                 </div>
 
                 <!-- Read-only: passwords can't be changed from here -->
-                <div class="admin-password">
-                    <span class="admin-password-label">Password</span>
-                    <span class="admin-password-value">${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</span>
+                <div class="admin-info">
+                    <span class="admin-info-label">Password</span>
+                    <span class="admin-info-value">${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</span>
                 </div>
 
                 <!-- The only thing you change on a card; saves as soon as you pick a group -->
