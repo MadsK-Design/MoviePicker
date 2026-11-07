@@ -16,6 +16,41 @@ const groupThemes = {};
 let themeLink = null;
 let activeTheme = null;
 
+/* Sound for themes. Phones only allow sound after a real tap, and an
+   iPhone only counts the moment the finger is lifted (or a key press),
+   so the sound engine is switched on then. The Login tap is enough. */
+let themeAudio = null;
+
+function unlockThemeAudio() {
+    if (!themeAudio) {
+        const AudioEngine = window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioEngine) {
+            return;
+        }
+
+        themeAudio = new AudioEngine();
+
+        // On iPhone: play even when the silent switch is on
+        if (navigator.audioSession) {
+            navigator.audioSession.type = "playback";
+        }
+    }
+
+    if (themeAudio.state === "suspended") {
+        themeAudio.resume();
+    }
+}
+
+// The sound engine, or null if no tap has switched it on yet
+function getThemeAudio() {
+    return themeAudio && themeAudio.state === "running" ? themeAudio : null;
+}
+
+["pointerup", "touchend", "click", "keydown"].forEach(type => {
+    document.addEventListener(type, unlockThemeAudio, { capture: true, passive: true });
+});
+
 function registerGroupTheme(name, theme) {
     groupThemes[name] = theme;
 }
