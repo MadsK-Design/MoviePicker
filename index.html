@@ -428,6 +428,13 @@
     <!-- Falling "Matrix" characters behind the admin page -->
     <canvas id="matrixRain" aria-hidden="true"></canvas>
 
+    <!-- Hacking animation that plays while the admin page loads -->
+    <div id="hackIntro" class="hack-intro hidden" aria-live="polite">
+        <pre id="hackIntroLog" class="hack-intro-log"></pre>
+        <p id="hackIntroProgress" class="hack-intro-progress"></p>
+        <p id="hackIntroGranted" class="hack-intro-granted hidden">Access granted</p>
+    </div>
+
     <div class="top-bar">
         <h1>Admin</h1>
 
@@ -459,14 +466,6 @@
             id="newGroupName"
             class="hidden"
             placeholder="New group name, e.g. Silke-Mads">
-
-        <label class="admin-checkbox">
-            <input
-                type="checkbox"
-                id="savePasswordInNotes"
-                checked>
-            Save password in notes
-        </label>
 
         <button id="createUserButton" type="button">
             Create User

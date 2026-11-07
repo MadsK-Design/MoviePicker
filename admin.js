@@ -5,7 +5,6 @@ const newUserUsername = document.getElementById("newUserUsername");
 const newUserPassword = document.getElementById("newUserPassword");
 const newUserGroup = document.getElementById("newUserGroup");
 const newGroupName = document.getElementById("newGroupName");
-const savePasswordInNotes = document.getElementById("savePasswordInNotes");
 const createUserButton = document.getElementById("createUserButton");
 const adminMessage = document.getElementById("adminMessage");
 const adminUserList = document.getElementById("adminUserList");
@@ -98,10 +97,149 @@ function stopMatrixRain() {
     window.removeEventListener("resize", resizeMatrixRain);
 }
 
+/* //Hacking intro: plays while the admin data loads\\ */
+
+const hackIntro = document.getElementById("hackIntro");
+const hackIntroLog = document.getElementById("hackIntroLog");
+const hackIntroProgress = document.getElementById("hackIntroProgress");
+const hackIntroGranted = document.getElementById("hackIntroGranted");
+
+const HACK_PROMPT = "root@hacker:~$ ";
+const HACK_JUNK = "ABCDEF0123456789!@#$%&*?";
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function randomFrom(characters, length) {
+    return Array.from(
+        { length },
+        () => characters[Math.floor(Math.random() * characters.length)]
+    ).join("");
+}
+
+function hackPrint(text, className = "") {
+    const line = document.createElement("span");
+
+    line.className = className;
+    line.textContent = `${text}\n`;
+
+    hackIntroLog.appendChild(line);
+    hackIntroLog.scrollTop = hackIntroLog.scrollHeight;
+
+    return line;
+}
+
+// Types a command at the prompt like a person would, a bit unevenly
+async function hackType(command) {
+    const line = hackPrint(HACK_PROMPT, "hack-command");
+
+    for (let i = 1; i <= command.length; i++) {
+        line.textContent = `${HACK_PROMPT}${command.slice(0, i)}\n`;
+        await sleep(15 + Math.random() * 35);
+    }
+
+    await sleep(150);
+}
+
+async function hackHexDump(rows) {
+    for (let i = 0; i < rows; i++) {
+        const address = `0x${randomFrom("0123456789abcdef", 4)}`;
+        const bytes = Array.from({ length: 8 }, () => randomFrom("0123456789abcdef", 2)).join(" ");
+
+        hackPrint(`${address}  ${bytes}`, "hack-dim");
+        await sleep(45);
+    }
+}
+
+// Characters spin until the "key" is found
+async function hackCrack(label, length) {
+    const line = hackPrint("");
+
+    for (let round = 0; round < 18; round++) {
+        line.textContent = `${label} ${randomFrom(HACK_JUNK, length)}\n`;
+        await sleep(45);
+    }
+
+    line.textContent = `${label} ${"*".repeat(length)}  [FOUND]\n`;
+    line.className = "hack-ok";
+}
+
+async function playHackScript() {
+    await hackType("nmap -sS moviepicker.app");
+    hackPrint("PORT     STATE  SERVICE", "hack-dim");
+    hackPrint("22/tcp   open   ssh");
+    hackPrint("443/tcp  open   https");
+    await sleep(250);
+
+    await hackType("./exploit --target moviepicker.app --user admin");
+
+    for (const step of ["Bypassing firewall ..........", "Injecting payload ..........."]) {
+        await sleep(180);
+        hackPrint(`[*] ${step} OK`, "hack-ok");
+    }
+
+    await hackHexDump(5);
+    await hackCrack("[*] Cracking admin key:", 12);
+    await sleep(150);
+
+    await hackType("decrypt --database users");
+}
+
+function drawHackProgress(percent) {
+    const filled = Math.round(percent / 5);
+
+    hackIntroProgress.textContent =
+        `LOADING [${"█".repeat(filled)}${"░".repeat(20 - filled)}] ${Math.round(percent)}%`;
+}
+
+function startHackIntro() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return { finish: async () => {} };
+    }
+
+    hackIntroLog.textContent = "";
+    hackIntroGranted.classList.add("hidden");
+    hackIntro.classList.remove("hidden", "fade-out");
+
+    const script = playHackScript();
+
+    // The bar creeps towards 90% until the data has actually arrived
+    let progress = 0;
+    drawHackProgress(progress);
+
+    const progressTimer = setInterval(() => {
+        progress += (90 - progress) * 0.03;
+        drawHackProgress(progress);
+    }, 80);
+
+    return {
+        async finish() {
+            await script;
+            clearInterval(progressTimer);
+
+            while (progress < 100) {
+                progress = Math.min(100, progress + 4);
+                drawHackProgress(progress);
+                await sleep(20);
+            }
+
+            hackIntroGranted.classList.remove("hidden");
+            await sleep(1000);
+
+            hackIntro.classList.add("fade-out");
+            await sleep(450);
+            hackIntro.classList.add("hidden");
+        }
+    };
+}
+
 async function showAdminPage() {
     adminSection.classList.remove("hidden");
     startMatrixRain();
+
+    const intro = startHackIntro();
+
     await loadAdminData();
+    await intro.finish();
 }
 
 async function loadAdminData() {
@@ -299,11 +437,10 @@ async function createUser() {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        if (savePasswordInNotes.checked) {
-            await db.collection("adminNotes").doc(uid).set({
-                notes: `Password: ${password}`
-            });
-        }
+        // Every new user gets a note with their password
+        await db.collection("adminNotes").doc(uid).set({
+            notes: `Password: ${password}`
+        });
     } catch (error) {
         console.error("Error linking user to group:", error);
         adminMessage.textContent =

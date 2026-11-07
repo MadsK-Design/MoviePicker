@@ -1512,10 +1512,6 @@ button {
     border-radius: 5px;
 }
 
-.admin-checkbox {
-    margin: 5px;
-}
-
 #createUserButton {
     font-weight: 600;
 }
@@ -2055,5 +2051,120 @@ body:has(#admin:not(.hidden)) {
 @media (min-width: 900px) {
     #admin .admin-self-card {
         align-self: stretch;
+    }
+}
+
+/* ---------- Hacking intro while the admin page loads ---------- */
+
+#admin .hack-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: 24px;
+    box-sizing: border-box;
+
+    background: #000;
+
+    transition: opacity .45s, transform .45s;
+}
+
+#admin .hack-intro.hidden {
+    display: none;
+}
+
+#admin .hack-intro.fade-out {
+    opacity: 0;
+    transform: scale(1.04);
+}
+
+#admin .hack-intro-log {
+    width: 100%;
+    max-width: 640px;
+    max-height: 60vh;
+    margin: 0 auto;
+
+    overflow: hidden;
+
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Blinking cursor after the last line */
+#admin .hack-intro-log::after {
+    content: "█";
+    animation: cursor-blink 1s steps(1) infinite;
+}
+
+#admin .hack-command {
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, .5);
+}
+
+#admin .hack-dim {
+    color: var(--hacker-dim);
+}
+
+#admin .hack-ok {
+    color: var(--hacker-green);
+    font-weight: 700;
+}
+
+#admin .hack-intro-progress {
+    width: 100%;
+    max-width: 640px;
+    margin: 16px auto 0;
+
+    font-size: 13px;
+    white-space: pre;
+    overflow: hidden;
+}
+
+#admin .hack-intro-granted {
+    margin: 28px 0 0;
+
+    text-align: center;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+
+    animation:
+        granted-in .3s ease-out both,
+        title-glitch .9s infinite;
+}
+
+#admin .hack-intro-granted.hidden {
+    display: none;
+}
+
+@keyframes granted-in {
+    from {
+        opacity: 0;
+        transform: scale(1.6);
+        filter: blur(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+@media (max-width: 400px) {
+    #admin .hack-intro-log,
+    #admin .hack-intro-progress {
+        font-size: 11px;
+    }
+
+    #admin .hack-intro-granted {
+        font-size: 22px;
     }
 }
