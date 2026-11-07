@@ -1,0 +1,18 @@
+/* ============================================
+   Design for the Demo list
+   ============================================
+
+   This file is only loaded when someone in the "demo" group logs in.
+   Everything written here is added on top of style.css, so you only
+   need to write what should look different.
+
+   Examples (move them below this comment to try them):
+
+   body {
+       background: #f0f7ff;
+   }
+
+   .bottom-nav .bottom-nav-button.active-tab {
+       background: #2563eb;
+   }
+*/
