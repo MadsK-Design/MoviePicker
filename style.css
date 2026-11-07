@@ -1888,6 +1888,22 @@ body:has(#admin:not(.hidden)) {
     box-shadow: 0 0 16px var(--hacker-red);
 }
 
+/* Warning button in amber, like an old terminal's warning colour */
+#admin .admin-block-button {
+    background: transparent;
+    color: #ffb000;
+    border-color: #ffb000;
+    text-shadow: 0 0 6px rgba(255, 176, 0, .6);
+}
+
+#admin .admin-block-button:hover,
+#admin .admin-block-button:active {
+    background: #ffb000;
+    color: #000;
+    text-shadow: none;
+    box-shadow: 0 0 16px #ffb000;
+}
+
 /* Status messages */
 #admin #adminMessage::before {
     content: "> ";
