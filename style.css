@@ -2972,3 +2972,18 @@ body:has(#admin:not(.hidden)) .status-bar-backdrop {
         transition: none;
     }
 }
+
+/* ---------- Random glitch: text flickers, jumps aside, snaps back ---------- */
+
+#admin .is-glitching {
+    position: relative;
+    animation: text-glitch .22s steps(2) both;
+}
+
+@keyframes text-glitch {
+    0%   { left: -3px; text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff; opacity: .85; }
+    25%  { left: 4px;  text-shadow: -3px 0 #ff00c8, 3px 0 #00e5ff; }
+    50%  { left: -2px; text-shadow: 1px 0 #ff00c8, -1px 0 #00e5ff; opacity: 1; }
+    75%  { left: 2px;  text-shadow: -2px 0 #ff00c8, 2px 0 #00e5ff; }
+    100% { left: 0; }
+}

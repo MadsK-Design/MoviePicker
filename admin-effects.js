@@ -284,6 +284,74 @@ async function playPowerOn() {
     screen.remove();
 }
 
+/* ---------- 15. Random glitch: text flickers, jumps, snaps back ---------- */
+
+// Headings, the user cards' username/password and the phone menu labels
+const GLITCH_TARGETS = [
+    "#admin .top-bar h1",
+    "#admin .admin-card h2",
+    "#admin .admin-user-card .admin-info-value",
+    "#admin .admin-nav-button span"
+].join(", ");
+
+let glitchTimer = null;
+
+function isOnScreen(element) {
+    const box = element.getBoundingClientRect();
+    return box.width > 0 && box.bottom > 0 && box.top < window.innerHeight;
+}
+
+async function glitchElement(element) {
+    // The real text (decryptText keeps it in data-text while it scrambles)
+    const target = element.dataset.text ?? element.textContent;
+
+    if (!target.trim() || element.classList.contains("is-glitching")) {
+        return;
+    }
+
+    element.classList.add("is-glitching");
+
+    // A few quick frames of random characters, then back to normal
+    for (let frame = 0; frame < 4; frame++) {
+        element.textContent = [...target]
+            .map(character => character !== " " && Math.random() < .35 ? randomFrom(ADMIN_GLYPHS, 1) : character)
+            .join("");
+        await sleep(55);
+    }
+
+    element.textContent = target;
+    element.classList.remove("is-glitching");
+}
+
+function startRandomGlitch() {
+    stopRandomGlitch();
+
+    if (adminReduceMotion()) {
+        return;
+    }
+
+    const next = () => {
+        glitchTimer = setTimeout(() => {
+            // Only text you can see, and only plain text (no icons inside)
+            const candidates = [...document.querySelectorAll(GLITCH_TARGETS)]
+                .filter(element => element.children.length === 0 && isOnScreen(element));
+
+            if (candidates.length) {
+                glitchElement(candidates[Math.floor(Math.random() * candidates.length)]);
+            }
+
+            next();
+        }, 3000 + Math.random() * 3000);
+    };
+
+    next();
+}
+
+function stopRandomGlitch() {
+    clearTimeout(glitchTimer);
+    glitchTimer = null;
+}
+
 /* ---------- 14. Search: scan line and highlights ---------- */
 
 function playSearchScan() {

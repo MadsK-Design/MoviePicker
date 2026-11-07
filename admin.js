@@ -244,6 +244,7 @@ async function showAdminPage() {
     startMatrixRain();
     startSystemLog();
     startUptime();
+    startRandomGlitch();
     startConsole();
     setAdminPanel("home");
 
@@ -689,6 +690,7 @@ adminLogoutButton.addEventListener("click", async () => {
     stopMatrixRain();
     stopSystemLog();
     stopUptime();
+    stopRandomGlitch();
     await auth.signOut();
 
     adminUserList.innerHTML = "";
