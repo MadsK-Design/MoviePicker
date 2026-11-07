@@ -1607,3 +1607,453 @@ button {
         padding: 10px 4px;
     }
 }
+
+
+/* ============================================
+   Admin page: "hacker" terminal look
+   Everything below only applies to the admin page
+   ============================================ */
+
+body:has(#admin:not(.hidden)) {
+    background: #000;
+}
+
+#admin {
+    --hacker-green: #00ff41;
+    --hacker-dim: #0a8f2c;
+    --hacker-dark: #001a07;
+    --hacker-red: #ff3b3b;
+
+    position: relative;
+    min-height: 100vh;
+
+    color: var(--hacker-green);
+    font-family: "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+    text-shadow: 0 0 6px rgba(0, 255, 65, .55);
+}
+
+/* Matrix rain in the background */
+#matrixRain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: .22;
+    pointer-events: none;
+}
+
+/* Everything else sits above the rain */
+#admin > :where(:not(#matrixRain)) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Old CRT screen: scanlines and a faint flicker */
+#admin::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, .28) 0,
+        rgba(0, 0, 0, .28) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+
+    pointer-events: none;
+    animation: crt-flicker 4s infinite;
+}
+
+@keyframes crt-flicker {
+    0%, 100% { opacity: .9; }
+    48%      { opacity: .9; }
+    50%      { opacity: .6; }
+    52%      { opacity: .95; }
+    80%      { opacity: .85; }
+}
+
+/* Title: "> ADMIN_" with a blinking cursor and the odd glitch */
+#admin .top-bar h1 {
+    font-size: 26px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+
+    animation: title-glitch 5s infinite;
+}
+
+#admin .top-bar h1::before {
+    content: "> ";
+    color: var(--hacker-dim);
+}
+
+#admin .top-bar h1::after {
+    content: "_";
+    animation: cursor-blink 1s steps(1) infinite;
+}
+
+@keyframes cursor-blink {
+    50% { opacity: 0; }
+}
+
+@keyframes title-glitch {
+    0%, 90%, 100% {
+        transform: none;
+        text-shadow: 0 0 6px rgba(0, 255, 65, .55);
+    }
+    91% {
+        transform: translateX(-2px) skewX(-8deg);
+        text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff;
+    }
+    93% {
+        transform: translateX(2px);
+        text-shadow: -3px 0 #ff00c8, 3px 0 #00e5ff;
+    }
+    95% {
+        transform: none;
+        text-shadow: 1px 0 #ff00c8, -1px 0 #00e5ff;
+    }
+}
+
+/* Boxes boot up one after the other and glow slowly */
+#admin .admin-card {
+    background: rgba(0, 12, 3, .88);
+    border: 1px solid var(--hacker-green);
+    border-radius: 4px;
+
+    box-shadow: 0 0 10px rgba(0, 255, 65, .25), inset 0 0 12px rgba(0, 255, 65, .08);
+
+    animation:
+        card-boot .6s ease-out both,
+        card-glow 3s ease-in-out .6s infinite;
+}
+
+#admin .admin-card:nth-of-type(2) {
+    animation-delay: .25s, .85s;
+}
+
+@keyframes card-boot {
+    0% {
+        opacity: 0;
+        clip-path: inset(0 0 100% 0);
+        transform: translateY(8px);
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        clip-path: inset(-30px -30px -30px -30px);
+        transform: none;
+    }
+}
+
+@keyframes card-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 65, .2), inset 0 0 12px rgba(0, 255, 65, .06); }
+    50%      { box-shadow: 0 0 18px rgba(0, 255, 65, .45), inset 0 0 16px rgba(0, 255, 65, .12); }
+}
+
+#admin .admin-card h2 {
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+#admin .admin-card h2::before {
+    content: "> ";
+    color: var(--hacker-dim);
+}
+
+/* Terminal input fields */
+#admin input:not([type="checkbox"]),
+#admin select,
+#admin textarea {
+    background: #000;
+    color: var(--hacker-green);
+    caret-color: var(--hacker-green);
+
+    border: 1px solid var(--hacker-dim);
+    border-radius: 2px;
+
+    font-family: inherit;
+    text-shadow: inherit;
+
+    transition: border-color .2s, box-shadow .2s;
+}
+
+#admin input::placeholder,
+#admin textarea::placeholder {
+    color: var(--hacker-dim);
+    text-shadow: none;
+}
+
+#admin input:not([type="checkbox"]):focus,
+#admin select:focus,
+#admin textarea:focus {
+    outline: none;
+    border-color: var(--hacker-green);
+    box-shadow: 0 0 10px rgba(0, 255, 65, .6);
+}
+
+#admin select option {
+    background: #000;
+    color: var(--hacker-green);
+}
+
+#admin input[type="checkbox"] {
+    accent-color: var(--hacker-green);
+}
+
+/* Terminal buttons: [ CREATE USER ] */
+#admin button {
+    background: transparent;
+    color: var(--hacker-green);
+
+    border: 1px solid var(--hacker-green);
+    border-radius: 2px;
+
+    font-family: inherit;
+    font-size: 13px !important;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: inherit;
+
+    cursor: pointer;
+    transition: background .15s, color .15s, box-shadow .15s;
+}
+
+#admin button::before {
+    content: "[ ";
+}
+
+#admin button::after {
+    content: " ]";
+}
+
+#admin button:hover,
+#admin button:active {
+    background: var(--hacker-green);
+    color: #000;
+    text-shadow: none;
+    box-shadow: 0 0 16px var(--hacker-green);
+}
+
+#admin #createUserButton {
+    padding: 12px;
+    animation: button-pulse 2s ease-in-out infinite;
+}
+
+@keyframes button-pulse {
+    0%, 100% { box-shadow: 0 0 4px rgba(0, 255, 65, .3); }
+    50%      { box-shadow: 0 0 14px rgba(0, 255, 65, .7); }
+}
+
+/* Danger buttons in red */
+#admin #adminLogoutButton,
+#admin .admin-remove-button {
+    background: transparent;
+    color: var(--hacker-red);
+    border-color: var(--hacker-red);
+    text-shadow: 0 0 6px rgba(255, 59, 59, .6);
+}
+
+#admin #adminLogoutButton:hover,
+#admin #adminLogoutButton:active,
+#admin .admin-remove-button:hover,
+#admin .admin-remove-button:active {
+    background: var(--hacker-red);
+    color: #000;
+    box-shadow: 0 0 16px var(--hacker-red);
+}
+
+/* Status messages */
+#admin #adminMessage::before {
+    content: "> ";
+}
+
+#admin #adminMessage:empty::before {
+    content: "";
+}
+
+/* User cards */
+#admin .admin-user-card {
+    background: rgba(0, 0, 0, .6);
+    border: 1px dashed var(--hacker-dim);
+    border-radius: 2px;
+
+    animation: card-boot .4s ease-out both;
+}
+
+#admin .admin-user-card:nth-child(2) { animation-delay: .1s; }
+#admin .admin-user-card:nth-child(3) { animation-delay: .2s; }
+#admin .admin-user-card:nth-child(4) { animation-delay: .3s; }
+#admin .admin-user-card:nth-child(n + 5) { animation-delay: .4s; }
+
+#admin .admin-user-card h3::before {
+    content: "@";
+    color: var(--hacker-dim);
+}
+
+#admin .admin-user-card.blocked-user {
+    border-color: var(--hacker-red);
+    opacity: .7;
+}
+
+#admin .admin-field {
+    color: var(--hacker-dim);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+#admin .admin-badge {
+    background: transparent;
+    color: var(--hacker-green);
+    border: 1px solid var(--hacker-green);
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+
+#admin .admin-badge.blocked {
+    color: var(--hacker-red);
+    border-color: var(--hacker-red);
+    text-shadow: 0 0 6px rgba(255, 59, 59, .6);
+    animation: cursor-blink 1s steps(1) infinite;
+}
+
+/* Phones with "Reduce Motion" turned on get the look without the movement */
+@media (prefers-reduced-motion: reduce) {
+    #admin *,
+    #admin *::before,
+    #admin *::after,
+    #admin::after {
+        animation: none !important;
+    }
+
+    #matrixRain {
+        display: none;
+    }
+}
+
+/* The three small buttons on each user need to fit side by side on a phone */
+#admin .admin-user-actions button {
+    padding: 10px 2px;
+    letter-spacing: 0;
+    font-size: 12px !important;
+    white-space: nowrap;
+}
+
+/* ---------- Admin page on bigger screens ---------- */
+
+/* The three user buttons share the width evenly on every screen size */
+#admin .admin-user-actions {
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+
+#admin .admin-user-actions button {
+    flex: 1;
+    min-width: 0;
+    margin: 6px 0 0;
+}
+
+/* Tablet: one column, centred */
+@media (min-width: 769px) {
+
+    #admin .top-bar,
+    #admin .admin-card {
+        max-width: 640px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* PC: Create User on the left, users in a grid on the right */
+@media (min-width: 900px) {
+
+    #admin {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        grid-template-rows: auto 1fr;
+        column-gap: 24px;
+        align-items: start;
+
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    #admin .top-bar {
+        grid-column: 1 / -1;
+        max-width: none;
+        width: 100%;
+    }
+
+    #admin .admin-card {
+        max-width: none;
+        margin: 0 0 24px;
+    }
+
+    /* Create User stays in view while scrolling through the users */
+    #admin .admin-card:first-of-type {
+        position: sticky;
+        top: 20px;
+    }
+
+    #adminUserList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 14px;
+        align-items: start;
+    }
+
+    #admin .admin-user-card {
+        margin: 0;
+    }
+}
+
+/* The admin's own card: a small "system status" */
+.admin-stats {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.admin-stats p {
+    display: flex;
+    justify-content: space-between;
+    margin: 6px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px dotted #ccc;
+}
+
+.admin-stats span {
+    color: #777;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+#admin .admin-stats p {
+    border-bottom-color: var(--hacker-dark);
+    border-bottom-color: rgba(0, 255, 65, .2);
+}
+
+#admin .admin-stats span {
+    color: var(--hacker-dim);
+}
+
+#admin .status-online {
+    animation: cursor-blink 1.4s steps(1) infinite;
+}
+
+/* On PC the admin card is as tall as the other cards in its row */
+@media (min-width: 900px) {
+    #admin .admin-self-card {
+        align-self: stretch;
+    }
+}
