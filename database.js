@@ -7,11 +7,12 @@ function snapshotToRows(snapshot) {
     return snapshot.docs.map(doc => ({ Id: doc.id, ...doc.data() }));
 }
 
-async function getMoviesFromDatabase() {
+// source: "default" asks Firebase, "cache" uses the copy saved on this device
+async function getMoviesFromDatabase(source = "default") {
     try {
         const snapshot = await groupCollection("movies")
             .orderBy("createdAt", "asc")
-            .get();
+            .get({ source });
 
         return snapshotToRows(snapshot);
     } catch (error) {
@@ -91,11 +92,11 @@ async function getUserProfile(userId) {
     }
 }
 
-async function getCustomGenresFromDatabase() {
+async function getCustomGenresFromDatabase(source = "default") {
     try {
         const snapshot = await groupCollection("genres")
             .orderBy("Genre", "asc")
-            .get();
+            .get({ source });
 
         return snapshotToRows(snapshot);
     } catch (error) {
@@ -126,7 +127,7 @@ async function deleteCustomGenreFromDatabase(id) {
     }
 }
 
-async function getMovieListsFromDatabase() {
+async function getMovieListsFromDatabase(source = "default") {
     if (!GROUP_ID) {
         return [];
     }
@@ -134,7 +135,7 @@ async function getMovieListsFromDatabase() {
     try {
         const snapshot = await groupCollection("lists")
             .orderBy("Lists", "asc")
-            .get();
+            .get({ source });
 
         return snapshotToRows(snapshot);
     } catch (error) {

@@ -101,10 +101,31 @@ auth.onAuthStateChanged(async user => {
     adminSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
-    await loadAllGenres();
-    await loadMovieLists();
-    await loadMovies();
+    await loadGroupData();
 });
+
+async function loadGroupData() {
+    // Show the copy saved on this phone right away, if there is one...
+    const cachedMovies = await getMoviesFromDatabase("cache");
+
+    if (cachedMovies.length > 0) {
+        await Promise.all([
+            loadAllGenres("cache"),
+            loadMovieLists("cache"),
+            loadMovies("cache")
+        ]);
+    }
+
+    // ...then fetch the latest from Firebase, all three at once
+    await Promise.all([
+        loadAllGenres(),
+        loadMovieLists(),
+        loadMovies()
+    ]);
+
+    // The movie list depends on the selected list, so draw it once more
+    renderMovies();
+}
 
 loginButton.addEventListener("click", loginUser);
 
