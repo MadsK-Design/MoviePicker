@@ -7,6 +7,16 @@ const loginButton = document.getElementById("loginButton");
 const loginError = document.getElementById("loginError");
 const logoutButton = document.getElementById("logoutButton");
 
+function usernameToEmail(username) {
+    return `${username.trim().toLowerCase()}@${EMAIL_DOMAIN}`;
+}
+
+// Firebase needs at least 6 characters, so "2507" is stored as "250700".
+// Used both when creating users and when logging in, so it always matches.
+function padPassword(password) {
+    return password.padEnd(6, "0");
+}
+
 async function loginUser() {
     const username = usernameInput.value.trim().toLowerCase();
     const password = passwordInput.value;
@@ -16,41 +26,24 @@ async function loginUser() {
         return;
     }
 
-    const email = `${username}@moviepicker.app`;
+    loginError.textContent = "";
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
-
-    if (error) {
+    try {
+        // onAuthStateChanged below takes over once the login succeeds
+        await auth.signInWithEmailAndPassword(
+            usernameToEmail(username),
+            padPassword(password)
+        );
+    } catch (error) {
         console.error("Login error:", error);
         loginError.textContent = "Login failed. Check username or password.";
-        return;
     }
-
-    const tableName = await getUserTable(data.user.id);
-
-    if (!tableName) {
-        loginError.textContent = "No movie list found for this user.";
-        return;
-    }
-
-    TABLE_NAME = tableName;
-
-    loginSection.classList.add("hidden");
-    appSection.classList.remove("hidden");
-
-
-    await loadAllGenres();
-    await loadMovieLists();
-    await loadMovies();
 }
 
 async function logoutUser() {
-    await supabaseClient.auth.signOut();
+    await auth.signOut();
 
-    TABLE_NAME = "";
+    GROUP_ID = "";
     movies = [];
 
     movieList.innerHTML = "";
@@ -59,42 +52,59 @@ async function logoutUser() {
     usernameInput.value = "";
     passwordInput.value = "";
     loginError.textContent = "";
-
-    appSection.classList.add("hidden");
-    loginSection.classList.remove("hidden");
 }
 
-async function checkExistingSession() {
-    const { data } = await supabaseClient.auth.getSession();
+function showLogin() {
+    loginSection.classList.remove("hidden");
+    appSection.classList.add("hidden");
+    adminSection.classList.add("hidden");
+}
 
-    if (!data.session) {
-        loginSection.classList.remove("hidden");
-        appSection.classList.add("hidden");
+async function refuseLogin(message) {
+    loginError.textContent = message;
+    await auth.signOut();
+}
+
+auth.onAuthStateChanged(async user => {
+    if (!user) {
+        showLogin();
         return;
     }
 
-    const user = data.session.user;
+    const profile = await getUserProfile(user.uid);
 
-    const tableName = await getUserTable(user.id);
-
-    if (!tableName) {
-        await supabaseClient.auth.signOut();
-
-        loginSection.classList.remove("hidden");
-        appSection.classList.add("hidden");
-
+    if (!profile) {
+        await refuseLogin("No movie list found for this user.");
         return;
     }
 
-    TABLE_NAME = tableName;
+    if (profile.admin === true) {
+        loginSection.classList.add("hidden");
+        appSection.classList.add("hidden");
+        await showAdminPage();
+        return;
+    }
+
+    if (profile.blocked === true) {
+        await refuseLogin("This user has been blocked.");
+        return;
+    }
+
+    if (!profile.groupId) {
+        await refuseLogin("No movie list found for this user.");
+        return;
+    }
+
+    GROUP_ID = profile.groupId;
 
     loginSection.classList.add("hidden");
+    adminSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
     await loadAllGenres();
     await loadMovieLists();
     await loadMovies();
-}
+});
 
 loginButton.addEventListener("click", loginUser);
 
@@ -105,5 +115,3 @@ passwordInput.addEventListener("keydown", event => {
 });
 
 logoutButton.addEventListener("click", logoutUser);
-
-checkExistingSession();

@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-version" content="__VERSION__">
     <title>Movie Picker</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=__VERSION__">
+
+    <script src="update.js?v=__VERSION__"></script>
 </head>
 
 <body>
@@ -379,14 +382,77 @@
 
 </div>
 
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="admin" class="hidden">
+
+    <div class="top-bar">
+        <h1>Admin</h1>
+
+        <button id="adminLogoutButton" type="button">
+            Logout
+        </button>
+    </div>
+
+    <section class="admin-card">
+
+        <h2>Create User</h2>
+
+        <input
+            type="text"
+            id="newUserUsername"
+            placeholder="Username"
+            autocomplete="off">
+
+        <input
+            type="text"
+            id="newUserPassword"
+            placeholder="Password"
+            autocomplete="off">
+
+        <select id="newUserGroup"></select>
+
+        <input
+            type="text"
+            id="newGroupName"
+            class="hidden"
+            placeholder="New group name, e.g. Silke-Mads">
+
+        <label class="admin-checkbox">
+            <input
+                type="checkbox"
+                id="savePasswordInNotes"
+                checked>
+            Save password in notes
+        </label>
+
+        <button id="createUserButton" type="button">
+            Create User
+        </button>
+
+        <p id="adminMessage"></p>
+
+    </section>
+
+    <section class="admin-card">
+
+        <h2>Users</h2>
+
+        <div id="adminUserList"></div>
+
+    </section>
+
+</div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <!-- JavaScript -->
-    <script src="config.js"></script>
-    <script src="database.js"></script>
-    <script src="script.js"></script>
-    <script src="login.js"></script>
+    <script src="config.js?v=__VERSION__"></script>
+    <script src="database.js?v=__VERSION__"></script>
+    <script src="script.js?v=__VERSION__"></script>
+    <script src="admin.js?v=__VERSION__"></script>
+    <script src="login.js?v=__VERSION__"></script>
 
 
 </body>

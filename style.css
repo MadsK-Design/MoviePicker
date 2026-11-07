@@ -1368,3 +1368,139 @@ button {
 
 
 }
+
+/* Admin page */
+
+#adminLogoutButton {
+    width: auto !important;
+    flex: 0 0 auto;
+    min-width: 70px;
+    padding: 8px 14px;
+    font-size: 13px !important;
+    font-weight: 600;
+    border-radius: 10px;
+    background: #cf2828;
+    color: white;
+}
+
+#adminLogoutButton:hover {
+    background: #b71c1c;
+}
+
+.admin-card {
+    max-width: 600px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-card h2 {
+    margin: 0 0 10px;
+}
+
+.admin-card input,
+.admin-card select,
+.admin-card textarea {
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.admin-checkbox {
+    margin: 5px;
+}
+
+#createUserButton {
+    font-weight: 600;
+}
+
+#adminMessage {
+    margin: 5px;
+    min-height: 1em;
+}
+
+.admin-user-card {
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.admin-user-card.blocked-user {
+    opacity: .6;
+}
+
+.admin-user-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-user-header h3 {
+    margin: 0;
+}
+
+.admin-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e3e3e3;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-badge.blocked {
+    background: #cf2828;
+    color: white;
+}
+
+.admin-field {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.admin-field select,
+.admin-field textarea {
+    margin: 4px 0 0;
+    font-family: inherit;
+    font-weight: normal;
+    padding: 8px;
+}
+
+.admin-user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.admin-user-actions button {
+    margin: 5px 5px 0 0;
+}
+
+.admin-remove-button {
+    color: #cf2828;
+}
+
+@media (max-width: 768px) {
+
+    .admin-card {
+        padding: 12px;
+    }
+
+    .admin-user-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    .admin-user-actions button {
+        flex: 1;
+        min-width: 0;
+        margin: 6px 0 0;
+        padding: 10px 4px;
+    }
+}

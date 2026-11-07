@@ -1,274 +1,211 @@
-async function getMoviesFromDatabase() {
-    const { data, error } = await supabaseClient
-        .from(TABLE_NAME)
-        .select("*")
-        .order("Id", { ascending: true });
+// Every group keeps its data in groups/{GROUP_ID}/movies, /genres and /lists
+function groupCollection(name) {
+    return db.collection("groups").doc(GROUP_ID).collection(name);
+}
 
-    if (error) {
-        console.error("Fejl ved hentning af film:", error);
-        alert("Kunne ikke hente film fra Supabase.");
+function snapshotToRows(snapshot) {
+    return snapshot.docs.map(doc => ({ Id: doc.id, ...doc.data() }));
+}
+
+async function getMoviesFromDatabase() {
+    try {
+        const snapshot = await groupCollection("movies")
+            .orderBy("createdAt", "asc")
+            .get();
+
+        return snapshotToRows(snapshot);
+    } catch (error) {
+        console.error("Error loading movies:", error);
+        alert("Could not load movies.");
         return [];
     }
-
-    return data;
 }
 
 async function addMovieToDatabase(movie) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .insert([movie]);
+    try {
+        await groupCollection("movies").add({
+            ...movie,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    if (error) {
-        console.error("Fejl ved tilføjelse af film:", error);
-        alert("Kunne ikke tilføje filmen til Supabase.");
+        return true;
+    } catch (error) {
+        console.error("Error adding movie:", error);
+        alert("Could not add the movie.");
         return false;
     }
-
-    return true;
 }
 
 async function deleteMovieFromDatabase(id) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .delete()
-        .eq("Id", id);
-
-    if (error) {
+    try {
+        await groupCollection("movies").doc(id).delete();
+        return true;
+    } catch (error) {
         console.error("Error deleting movie:", error);
         alert("Could not delete the movie.");
         return false;
     }
-
-    return true;
 }
 
 async function markMovieAsWatched(id) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .update({ Watched: true })
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("movies").doc(id).update({ Watched: true });
+        return true;
+    } catch (error) {
         console.error("Error marking movie as watched:", error);
         alert("Could not mark movie as watched.");
         return false;
     }
-
-    return true;
 }
 
 async function unmarkMovieAsWatched(id) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .update({ Watched: false })
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("movies").doc(id).update({ Watched: false });
+        return true;
+    } catch (error) {
         console.error("Error unmarking movie as watched:", error);
         alert("Could not remove watched status.");
         return false;
     }
-
-    return true;
 }
 
 async function editMovieInDatabase(id, updatedMovie) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .update(updatedMovie)
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("movies").doc(id).update(updatedMovie);
+        return true;
+    } catch (error) {
         console.error("Error editing movie:", error);
         alert("Could not edit the movie.");
         return false;
     }
-
-    return true;
 }
 
-async function getUserTable(userId) {
-    const { data, error } = await supabaseClient
-        .from("1_Users")
-        .select("table_name")
-        .eq("user_id", userId)
-        .single();
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
-    if (error) {
+// Returns { username, groupId, admin, blocked } or null
+async function getUserProfile(userId) {
+    try {
+        const doc = await db.collection("users").doc(userId).get();
+        return doc.exists ? doc.data() : null;
+    } catch (error) {
+        console.error("Error loading user profile:", error);
         return null;
     }
-
-    return data.table_name;
 }
 
 async function getCustomGenresFromDatabase() {
-    const genreTableName = TABLE_NAME + "_Genre";
+    try {
+        const snapshot = await groupCollection("genres")
+            .orderBy("Genre", "asc")
+            .get();
 
-    const { data, error } = await supabaseClient
-        .from(genreTableName)
-        .select("Id, Genre")
-        .order("Genre", { ascending: true });
-
-    if (error) {
+        return snapshotToRows(snapshot);
+    } catch (error) {
         console.error("Error loading custom genres:", error);
         return [];
     }
-
-    return data;
 }
 
 async function addCustomGenreToDatabase(genreName) {
-    const genreTableName = TABLE_NAME + "_Genre";
-
-    const { error } = await supabaseClient
-        .from(genreTableName)
-        .insert([{ Genre: genreName }]);
-
-    if (error) {
+    try {
+        await groupCollection("genres").add({ Genre: genreName });
+        return true;
+    } catch (error) {
         console.error("Error adding custom genre:", error);
         alert("Could not add genre.");
         return false;
     }
-
-    return true;
 }
 
 async function deleteCustomGenreFromDatabase(id) {
-    const genreTableName = TABLE_NAME + "_Genre";
-
-    const { error } = await supabaseClient
-        .from(genreTableName)
-        .delete()
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("genres").doc(id).delete();
+        return true;
+    } catch (error) {
         console.error("Error deleting custom genre:", error);
         alert("Could not delete genre.");
         return false;
     }
-
-    return true;
 }
 
 async function getMovieListsFromDatabase() {
-    if (!TABLE_NAME) {
+    if (!GROUP_ID) {
         return [];
     }
 
-    const listTableName = `${TABLE_NAME}_Lists`;
+    try {
+        const snapshot = await groupCollection("lists")
+            .orderBy("Lists", "asc")
+            .get();
 
-    const { data, error } = await supabaseClient
-        .from(listTableName)
-        .select("*")
-        .order("Lists", { ascending: true });
-
-    if (error) {
+        return snapshotToRows(snapshot);
+    } catch (error) {
         console.error("Error loading movie lists:", error);
         return [];
     }
-
-    return data || [];
 }
 
 async function addMovieListToDatabase(listName, tagName) {
-
-    if (!TABLE_NAME) {
-        console.error("No movie table selected.");
+    if (!GROUP_ID) {
+        console.error("No group selected.");
         return false;
     }
 
-    const listTableName = `${TABLE_NAME}_Lists`;
-
-    const { error } = await supabaseClient
-        .from(listTableName)
-        .insert({
+    try {
+        await groupCollection("lists").add({
             Lists: listName,
             Tag: tagName
         });
 
-    if (error) {
+        return true;
+    } catch (error) {
         console.error("Error creating movie list:", error);
         return false;
     }
-
-    return true;
 }
 
 async function deleteMovieListFromDatabase(id) {
-    if (!TABLE_NAME) {
+    if (!GROUP_ID) {
         return false;
     }
 
-    const listTableName = `${TABLE_NAME}_Lists`;
-
-    const { error } = await supabaseClient
-        .from(listTableName)
-        .delete()
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("lists").doc(id).delete();
+        return true;
+    } catch (error) {
         console.error("Error deleting movie list:", error);
         alert("Could not delete the movie list.");
         return false;
     }
-
-    return true;
 }
 
 async function removeListFromAllMovies(listName) {
-    const { data, error } = await supabaseClient
-        .from(TABLE_NAME)
-        .select("Id, Lists");
+    try {
+        const snapshot = await groupCollection("movies")
+            .where("Lists", "array-contains", listName)
+            .get();
 
-    if (error) {
-        console.error("Error loading movies for list cleanup:", error);
+        const batch = db.batch();
+
+        snapshot.docs.forEach(doc => {
+            batch.update(doc.ref, {
+                Lists: firebase.firestore.FieldValue.arrayRemove(listName)
+            });
+        });
+
+        await batch.commit();
+        return true;
+    } catch (error) {
+        console.error("Error removing list from movies:", error);
         return false;
     }
-
-    const affectedMovies = (data || []).filter(movie =>
-        Array.isArray(movie.Lists) &&
-        movie.Lists.includes(listName)
-    );
-
-    for (const movie of affectedMovies) {
-        const updatedLists = movie.Lists.filter(
-            list => list !== listName
-        );
-
-        const { error: updateError } = await supabaseClient
-            .from(TABLE_NAME)
-            .update({ Lists: updatedLists })
-            .eq("Id", movie.Id);
-
-        if (updateError) {
-            console.error(
-                `Error removing list from movie ${movie.Id}:`,
-                updateError
-            );
-
-            return false;
-        }
-    }
-
-    return true;
 }
 
 async function updateMovieListsInDatabase(id, lists) {
-    const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .update({
-            Lists: lists
-        })
-        .eq("Id", Number(id));
-
-    if (error) {
+    try {
+        await groupCollection("movies").doc(id).update({ Lists: lists });
+        return true;
+    } catch (error) {
         console.error("Error updating movie lists:", error);
         alert("Could not update movie lists.");
         return false;
     }
-
-    return true;
 }
