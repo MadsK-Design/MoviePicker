@@ -1554,8 +1554,13 @@ button {
 
 .admin-user-header {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
+}
+
+/* The badge (Admin / Blocked) lines up with the name, not the label */
+.admin-user-header .admin-badge {
+    margin-bottom: 4px;
 }
 
 .admin-user-header h3 {
@@ -1584,6 +1589,7 @@ button {
 }
 
 .admin-field select,
+.admin-field input,
 .admin-field textarea {
     margin: 4px 0 0;
     font-family: inherit;
@@ -1753,6 +1759,26 @@ body:has(#admin:not(.hidden)) {
     animation-delay: .25s, .85s;
 }
 
+#admin .admin-card:nth-of-type(3) {
+    animation-delay: .5s, 1.1s;
+}
+
+/* "2 of 5 users" under the search box */
+.admin-search-info {
+    min-height: 1em;
+    margin: 6px 5px 0;
+    color: #777;
+    font-size: 13px;
+}
+
+#admin .admin-search-info {
+    color: var(--hacker-dim);
+}
+
+#admin .admin-search-info:not(:empty)::before {
+    content: "> ";
+}
+
 @keyframes card-boot {
     0% {
         opacity: 0;
@@ -1888,6 +1914,22 @@ body:has(#admin:not(.hidden)) {
     box-shadow: 0 0 16px var(--hacker-red);
 }
 
+/* Warning button in amber, like an old terminal's warning colour */
+#admin .admin-block-button {
+    background: transparent;
+    color: #ffb000;
+    border-color: #ffb000;
+    text-shadow: 0 0 6px rgba(255, 176, 0, .6);
+}
+
+#admin .admin-block-button:hover,
+#admin .admin-block-button:active {
+    background: #ffb000;
+    color: #000;
+    text-shadow: none;
+    box-shadow: 0 0 16px #ffb000;
+}
+
 /* Status messages */
 #admin #adminMessage::before {
     content: "> ";
@@ -1911,9 +1953,19 @@ body:has(#admin:not(.hidden)) {
 #admin .admin-user-card:nth-child(4) { animation-delay: .3s; }
 #admin .admin-user-card:nth-child(n + 5) { animation-delay: .4s; }
 
-#admin .admin-user-card h3::before {
+/* The admin's own card keeps its "@admin" title */
+#admin .admin-self-card h3::before {
     content: "@";
     color: var(--hacker-dim);
+}
+
+/* ...and its badge sits centred next to the title */
+.admin-self-card .admin-user-header {
+    align-items: center;
+}
+
+.admin-self-card .admin-user-header .admin-badge {
+    margin-bottom: 0;
 }
 
 #admin .admin-user-card.blocked-user {
@@ -1926,6 +1978,41 @@ body:has(#admin:not(.hidden)) {
     font-size: 11px;
     letter-spacing: 1px;
     text-transform: uppercase;
+}
+
+/* User and password: a small label with the value in large text under it */
+.admin-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-user-header + .admin-info {
+    margin-top: 8px;
+}
+
+.admin-info-label {
+    color: #777;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.admin-info-value {
+    margin-top: 2px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    word-break: break-all;
+}
+
+#admin .admin-info-label {
+    color: var(--hacker-dim);
+}
+
+#admin .admin-info-value {
+    color: var(--hacker-green);
+    text-shadow: 0 0 8px rgba(0, 255, 65, .7);
 }
 
 #admin .admin-badge {
@@ -1996,8 +2083,10 @@ body:has(#admin:not(.hidden)) {
     #admin {
         display: grid;
         grid-template-columns: 340px 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto auto 1fr auto;
         column-gap: 24px;
+        /* No full-screen height here, or the empty row above the console stretches */
+        min-height: 0;
         align-items: start;
 
         max-width: 1200px;
@@ -2015,10 +2104,32 @@ body:has(#admin:not(.hidden)) {
         margin: 0 0 24px;
     }
 
-    /* Create User stays in view while scrolling through the users */
+    /* Left column: Create User with Search User under it.
+       Right column: the users, as tall as both together. */
     #admin .admin-card:first-of-type {
-        position: sticky;
-        top: 20px;
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    #admin .admin-search-card {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    #admin .admin-log-card {
+        grid-column: 1;
+        grid-row: 4;
+    }
+
+    #admin .admin-users-card {
+        grid-column: 2;
+        grid-row: 2 / span 3;
+    }
+
+    /* The console runs across the full width under everything */
+    #admin .admin-console-card {
+        grid-column: 1 / -1;
+        grid-row: 5;
     }
 
     #adminUserList {
@@ -2192,4 +2303,671 @@ body:has(#admin:not(.hidden)) {
 /* The strip behind the iPhone clock is plain black on the admin page */
 body:has(#admin:not(.hidden)) .status-bar-backdrop {
     background: #000;
+}
+
+/* ============================================
+   Admin page: extra hacker effects (admin-effects.js)
+   ============================================ */
+
+#admin .admin-card:nth-of-type(4) {
+    animation-delay: .7s, 1.3s;
+}
+
+/* 3. A block cursor in the input fields, where the browser supports it */
+#admin input:not([type="checkbox"]),
+#admin textarea {
+    caret-shape: block;
+}
+
+/* 10. Uptime and clock in the top bar */
+.admin-uptime {
+    flex: 1;
+    margin: 0 12px;
+
+    color: #777;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+#admin .admin-uptime {
+    color: var(--hacker-dim);
+}
+
+@media (max-width: 420px) {
+    .admin-uptime {
+        font-size: 9px;
+        margin: 0 6px;
+    }
+}
+
+/* 2. Messages type themselves out, with a blinking cursor */
+#admin #adminMessage.is-typing::after {
+    content: "█";
+    animation: cursor-blink 1s steps(1) infinite;
+}
+
+#admin #adminMessage.is-error {
+    color: var(--hacker-red);
+    text-shadow: 0 0 6px rgba(255, 59, 59, .6);
+}
+
+/* 5. Create User as a little process log */
+#admin #adminMessage.is-log::before {
+    content: "";
+}
+
+#admin .process-line {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+#admin .process-line::before {
+    content: "> ";
+    color: var(--hacker-dim);
+}
+
+#admin .process-ok {
+    color: var(--hacker-green);
+}
+
+#admin .process-fail,
+#admin .process-error {
+    color: var(--hacker-red);
+    text-shadow: 0 0 6px rgba(255, 59, 59, .6);
+}
+
+#admin .process-granted {
+    font-weight: 700;
+    letter-spacing: 2px;
+    animation: title-glitch 1.2s 2;
+}
+
+/* Cards need to hold the stamp, wipe and transfer overlays */
+#admin .admin-user-card {
+    position: relative;
+    overflow: hidden;
+}
+
+/* 6. Block / unblock: flash and a stamp slamming onto the card */
+#admin .admin-user-card.is-locking {
+    animation: card-lockdown .9s steps(2) both;
+}
+
+#admin .admin-user-card.is-unlocking {
+    animation: card-unlock .9s ease-out both;
+}
+
+@keyframes card-lockdown {
+    0%   { border-color: #ffb000; background: rgba(255, 176, 0, .25); transform: translateX(-3px); }
+    25%  { background: rgba(255, 176, 0, .05); transform: translateX(3px) skewX(-3deg); }
+    50%  { background: rgba(255, 176, 0, .2); transform: none; }
+    100% { border-color: #ffb000; background: rgba(255, 176, 0, .08); }
+}
+
+@keyframes card-unlock {
+    0%   { background: rgba(0, 255, 65, .25); }
+    100% { background: rgba(0, 0, 0, .6); }
+}
+
+#admin .card-stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+
+    padding: 6px 14px;
+    border: 3px solid currentColor;
+    border-radius: 4px;
+
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    background: rgba(0, 0, 0, .75);
+
+    pointer-events: none;
+    animation: stamp-slam .35s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+
+#admin .card-stamp.is-locked {
+    color: #ffb000;
+    text-shadow: 0 0 10px rgba(255, 176, 0, .8);
+}
+
+#admin .card-stamp.is-unlocked {
+    color: var(--hacker-green);
+}
+
+@keyframes stamp-slam {
+    from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(3); }
+    to   { opacity: 1; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+}
+
+/* 7. Remove: the card melts away into falling characters */
+#admin .admin-user-card.is-wiping {
+    animation: card-melt 1.1s ease-in both;
+}
+
+#admin .admin-user-card.is-wiping > :not(.card-wipe) {
+    animation: card-melt-content .6s ease-in both;
+}
+
+@keyframes card-melt {
+    0%   { clip-path: inset(0 0 0 0); }
+    40%  { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(100% 0 0 0); }
+}
+
+@keyframes card-melt-content {
+    to { opacity: 0; filter: blur(3px); transform: translateY(6px); }
+}
+
+#admin .card-wipe {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+#admin .card-wipe span {
+    position: absolute;
+    top: -100%;
+
+    color: var(--hacker-green);
+    font-size: 12px;
+    line-height: 1.1;
+    white-space: pre;
+    text-shadow: 0 0 6px rgba(0, 255, 65, .8);
+
+    animation: wipe-fall 1s linear both;
+}
+
+@keyframes wipe-fall {
+    from { transform: translateY(0); opacity: 1; }
+    to   { transform: translateY(260%); opacity: 0; }
+}
+
+/* 8. Group change: a transfer progress bar across the card */
+#admin .card-transfer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    background: rgba(0, 0, 0, .88);
+    color: var(--hacker-green);
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+#admin .card-transfer-bar {
+    white-space: pre;
+}
+
+/* 9. System log */
+.admin-system-log {
+    min-height: 8.4em;
+    margin: 0;
+
+    color: #777;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+#admin .admin-system-log {
+    color: var(--hacker-dim);
+    text-shadow: none;
+}
+
+#admin .admin-system-log div:last-child {
+    color: var(--hacker-green);
+    text-shadow: 0 0 6px rgba(0, 255, 65, .55);
+}
+
+/* 11. CRT "power on": a bright line opens up into the picture */
+#admin .crt-power {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+#admin .crt-half {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: #000;
+    animation: crt-open .45s cubic-bezier(.7, 0, .3, 1) .25s both;
+}
+
+#admin .crt-top {
+    top: 0;
+    --crt-direction: -100%;
+}
+
+#admin .crt-bottom {
+    bottom: 0;
+    --crt-direction: 100%;
+}
+
+#admin .crt-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    margin-top: -1px;
+
+    background: #eaffea;
+    box-shadow: 0 0 18px 6px rgba(0, 255, 65, .8);
+
+    animation: crt-line .7s ease-out both;
+}
+
+@keyframes crt-open {
+    to { transform: translateY(var(--crt-direction)); }
+}
+
+@keyframes crt-line {
+    0%   { transform: scaleX(0); opacity: 1; }
+    35%  { transform: scaleX(1); opacity: 1; }
+    100% { transform: scaleX(1) scaleY(60); opacity: 0; }
+}
+
+/* 14. Search: a scan line sweeps the list, matches light up */
+#admin .admin-users-card.is-scanning::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 2;
+    height: 3px;
+
+    background: var(--hacker-green);
+    box-shadow: 0 0 14px 4px rgba(0, 255, 65, .7);
+
+    pointer-events: none;
+    animation: scan-sweep .55s ease-in-out both;
+}
+
+@keyframes scan-sweep {
+    from { top: 0; opacity: 1; }
+    to   { top: 100%; opacity: 0; }
+}
+
+#admin .admin-user-card.scan-miss {
+    opacity: 0;
+    transform: scale(.96);
+    transition: opacity .2s, transform .2s;
+}
+
+#admin .admin-user-card.scan-hit {
+    animation: scan-hit .6s ease-out;
+}
+
+@keyframes scan-hit {
+    0%   { box-shadow: 0 0 0 1px var(--hacker-green), 0 0 22px rgba(0, 255, 65, .8); }
+    100% { box-shadow: none; }
+}
+
+/* On phones the clock gets its own line under the title */
+@media (max-width: 600px) {
+    #admin .top-bar {
+        flex-wrap: wrap;
+    }
+
+    #admin .admin-uptime {
+        order: 3;
+        flex-basis: 100%;
+        margin: 4px 0 0;
+        font-size: 10px;
+        text-align: left;
+    }
+}
+
+/* ============================================
+   Admin console (admin-console.js)
+   ============================================ */
+
+.console-output {
+    height: 280px;
+    overflow-y: auto;
+    padding: 10px;
+
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 4px;
+
+    font-family: "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: text;
+}
+
+
+.console-prompt {
+    flex: 0 0 auto;
+    font-family: "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+
+.console-suggestions {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4px;
+}
+
+/* Suggestions are text lines, not buttons, so they skip the [ ] look */
+#admin .console-suggestion {
+    margin: 0;
+    padding: 6px 8px;
+
+    border: none;
+    border-left: 2px solid transparent;
+    background: transparent;
+    color: var(--hacker-dim);
+
+    font-size: 13px !important;
+    font-weight: normal;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+    box-shadow: none;
+}
+
+#admin .console-suggestion::before {
+    content: "  ";
+}
+
+#admin .console-suggestion::after {
+    content: "";
+}
+
+#admin .console-suggestion.is-highlighted,
+#admin .console-suggestion:hover {
+    background: rgba(0, 255, 65, .12);
+    border-left-color: var(--hacker-green);
+    color: var(--hacker-green);
+    box-shadow: none;
+}
+
+#admin .console-suggestion.is-highlighted::before {
+    content: "▸ ";
+}
+
+#admin .console-suggestion-empty {
+    padding: 6px 8px;
+    color: var(--hacker-dim);
+    font-size: 12px;
+}
+
+/* Colours of the different kinds of lines */
+#admin .console-output {
+    border-color: var(--hacker-dim);
+    box-shadow: inset 0 0 18px rgba(0, 255, 65, .08);
+}
+
+#admin .console-prompt,
+#admin .console-line {
+    color: var(--hacker-green);
+}
+
+#admin .console-echo {
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, .45);
+}
+
+#admin .console-dim {
+    color: var(--hacker-dim);
+    text-shadow: none;
+}
+
+#admin .console-heading {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+#admin .console-ask {
+    color: #7fdfff;
+    text-shadow: 0 0 6px rgba(127, 223, 255, .5);
+}
+
+#admin .console-warn {
+    color: #ffb000;
+    text-shadow: 0 0 6px rgba(255, 176, 0, .55);
+}
+
+#admin .console-error {
+    color: var(--hacker-red);
+    text-shadow: 0 0 6px rgba(255, 59, 59, .55);
+}
+
+#admin .console-ok {
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 255, 65, .9);
+}
+
+@media (max-width: 600px) {
+    .console-output {
+        height: 240px;
+        font-size: 11px;
+    }
+
+    .console-prompt {
+        max-width: 45%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ---------- Console: typing straight into the terminal ---------- */
+
+/* The real input is invisible; it only receives the keys */
+#admin .console-input {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+
+    opacity: 0;
+    border: none;
+    caret-color: transparent;
+
+    /* 16px keeps iPhones from zooming in when it gets focus */
+    font-size: 16px !important;
+}
+
+.console-live {
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+#admin .console-live,
+#admin .console-typed {
+    color: #fff;
+}
+
+/* The block cursor: solid while you type, blinking while waiting */
+.console-cursor {
+    background: currentColor;
+    color: #000;
+}
+
+#admin .console-cursor {
+    background: var(--hacker-green);
+    color: #000;
+    text-shadow: none;
+    box-shadow: 0 0 8px rgba(0, 255, 65, .8);
+}
+
+#admin .console-output.is-focused .console-cursor {
+    animation: console-cursor-blink 1s steps(1) infinite;
+}
+
+#admin .console-output:not(.is-focused) .console-cursor {
+    background: transparent;
+    color: inherit;
+    box-shadow: inset 0 0 0 1px var(--hacker-dim);
+}
+
+@keyframes console-cursor-blink {
+    50% {
+        background: transparent;
+        color: inherit;
+        box-shadow: none;
+    }
+}
+
+#admin .console-output.is-focused {
+    border-color: var(--hacker-green);
+}
+
+/* ---------- Phone menu: Create / Home / Console ---------- */
+
+/* Only shown on phones; on bigger screens everything fits on one page */
+.admin-nav {
+    display: none;
+}
+
+@media (max-width: 600px) {
+
+    #admin {
+        padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+
+    /* Only the boxes for the chosen tab are shown */
+    #admin[data-panel="create"] .admin-card:not([data-panel="create"]),
+    #admin[data-panel="home"] .admin-card:not([data-panel="home"]),
+    #admin[data-panel="console"] .admin-card:not([data-panel="console"]) {
+        display: none;
+    }
+
+    #admin .admin-nav {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        z-index: 5;
+
+        display: flex;
+        padding: 6px 0 4px;
+
+        background: rgba(0, 10, 3, .94);
+        border: 1px solid var(--hacker-green);
+        border-radius: 6px;
+        box-shadow: 0 0 16px rgba(0, 255, 65, .35), inset 0 0 18px rgba(0, 255, 65, .08);
+    }
+
+    /* The glowing marker slides to the chosen tab */
+    #admin .admin-nav-marker {
+        position: absolute;
+        top: -1px;
+        left: 0;
+        width: calc(100% / 3);
+        height: 3px;
+
+        background: var(--hacker-green);
+        box-shadow: 0 0 12px 2px rgba(0, 255, 65, .9);
+
+        transform: translateX(calc(var(--marker-index, 1) * 100%));
+        transition: transform .35s cubic-bezier(.7, 0, .2, 1.3);
+    }
+
+    #admin .admin-nav-button {
+        flex: 1;
+        width: auto !important;
+        min-width: 0;
+        margin: 0;
+        padding: 6px 0 4px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+
+        border: none;
+        background: transparent;
+        color: var(--hacker-dim);
+
+        font-size: 10px !important;
+        letter-spacing: 1px;
+        box-shadow: none;
+        text-shadow: none;
+    }
+
+    /* No [ ] around the menu buttons */
+    #admin .admin-nav-button::before,
+    #admin .admin-nav-button::after {
+        content: none;
+    }
+
+    #admin .admin-nav-button:hover,
+    #admin .admin-nav-button:active {
+        background: transparent;
+        color: var(--hacker-green);
+        box-shadow: none;
+    }
+
+    #admin .admin-nav-button svg {
+        width: 24px;
+        height: 24px;
+
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    #admin .admin-nav-button.is-active {
+        color: var(--hacker-green);
+        text-shadow: 0 0 8px rgba(0, 255, 65, .8);
+    }
+
+    #admin .admin-nav-button.is-active svg {
+        filter: drop-shadow(0 0 5px rgba(0, 255, 65, .9));
+        animation: nav-glitch .45s steps(2) 1;
+    }
+
+    /* The boxes of the chosen tab boot up again */
+    #admin .admin-card.panel-enter {
+        animation:
+            card-boot .45s ease-out both,
+            card-glow 3s ease-in-out .45s infinite;
+    }
+
+    /* The console gets more room on a phone */
+    #admin .console-output {
+        height: 50vh;
+    }
+}
+
+@keyframes nav-glitch {
+    0%   { transform: translate(-2px, 1px); filter: drop-shadow(2px 0 #ff00c8) drop-shadow(-2px 0 #00e5ff); }
+    50%  { transform: translate(2px, -1px); filter: drop-shadow(-2px 0 #ff00c8) drop-shadow(2px 0 #00e5ff); }
+    100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #admin .admin-nav-marker {
+        transition: none;
+    }
 }

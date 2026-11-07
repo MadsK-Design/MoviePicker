@@ -8,12 +8,19 @@ const newGroupName = document.getElementById("newGroupName");
 const createUserButton = document.getElementById("createUserButton");
 const adminMessage = document.getElementById("adminMessage");
 const adminUserList = document.getElementById("adminUserList");
+const adminUserSearch = document.getElementById("adminUserSearch");
+const adminSearchInfo = document.getElementById("adminSearchInfo");
 
 const NEW_GROUP_VALUE = "__new__";
 
 let adminUsers = [];
 let adminGroups = [];
 let adminNotes = {};
+
+// Older cards were saved as "Password: 2507"; show just the password
+function passwordFromNote(note) {
+    return (note || "").replace(/^Password:\s*/i, "");
+}
 
 // A second Firebase app is used to create users, because creating a user
 // signs that user in, and we don't want to log the admin out
@@ -225,9 +232,9 @@ function startHackIntro() {
             hackIntroGranted.classList.remove("hidden");
             await sleep(650);
 
-            hackIntro.classList.add("fade-out");
-            await sleep(450);
+            // The page then switches on like an old CRT screen
             hackIntro.classList.add("hidden");
+            await playPowerOn();
         }
     };
 }
@@ -235,11 +242,18 @@ function startHackIntro() {
 async function showAdminPage() {
     adminSection.classList.remove("hidden");
     startMatrixRain();
+    startSystemLog();
+    startUptime();
+    startConsole();
+    setAdminPanel("home");
 
     const intro = startHackIntro();
 
     await loadAdminData();
     await intro.finish();
+
+    // The cards were drawn behind the intro; decrypt them now that they show
+    decryptUserCards();
 }
 
 async function loadAdminData() {
@@ -264,7 +278,7 @@ async function loadAdminData() {
         });
     } catch (error) {
         console.error("Error loading admin data:", error);
-        adminMessage.textContent = "Could not load users. Are the Firestore rules published?";
+        typeAdminMessage("Could not load users. Are the Firestore rules published?", true);
         return;
     }
 
@@ -327,13 +341,28 @@ function renderAdminUsers() {
             `;
         }
 
+        // What the search box looks in: the username and the group's name
+        const group = adminGroups.find(group => group.id === user.groupId);
+        const searchText = `${user.username || ""} ${group?.name || user.groupId || ""}`.toLowerCase();
+
         return `
-            <div class="admin-user-card ${user.blocked ? "blocked-user" : ""}" data-uid="${user.uid}">
+            <div class="admin-user-card ${user.blocked ? "blocked-user" : ""}" data-uid="${user.uid}"
+                 data-search="${escapeHtml(searchText)}">
                 <div class="admin-user-header">
-                    <h3>${escapeHtml(user.username || user.uid)}</h3>
+                    <div class="admin-info">
+                        <span class="admin-info-label">User</span>
+                        <span class="admin-info-value">${escapeHtml(user.username || user.uid)}</span>
+                    </div>
                     ${user.blocked ? `<span class="admin-badge blocked">Blocked</span>` : ""}
                 </div>
 
+                <!-- Read-only: passwords can't be changed from here -->
+                <div class="admin-info">
+                    <span class="admin-info-label">Password</span>
+                    <span class="admin-info-value">${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</span>
+                </div>
+
+                <!-- The only thing you change on a card; saves as soon as you pick a group -->
                 <label class="admin-field">
                     Group
                     <select class="admin-group-select">
@@ -341,13 +370,7 @@ function renderAdminUsers() {
                     </select>
                 </label>
 
-                <label class="admin-field">
-                    Notes
-                    <textarea class="admin-notes" rows="2">${escapeHtml(adminNotes[user.uid] || "")}</textarea>
-                </label>
-
                 <div class="admin-user-actions">
-                    <button type="button" class="admin-save-notes-button">Save</button>
                     <button type="button" class="admin-block-button">
                         ${user.blocked ? "Unblock" : "Block"}
                     </button>
@@ -356,6 +379,45 @@ function renderAdminUsers() {
             </div>
         `;
     }).join("");
+
+    filterAdminUsers(false);
+    decryptUserCards();
+}
+
+// Shows only the users whose name or group matches the search box.
+// While typing, a scan line sweeps over the list and matches light up.
+function filterAdminUsers(fromTyping = true) {
+    const query = adminUserSearch.value.trim().toLowerCase();
+    const cards = [...adminUserList.querySelectorAll(".admin-user-card[data-uid]")];
+    let shown = 0;
+
+    if (fromTyping) {
+        playSearchScan();
+    }
+
+    cards.forEach(card => {
+        const matches = !query || card.dataset.search.includes(query);
+        showCardInSearch(card, matches, fromTyping && Boolean(query));
+
+        if (matches) {
+            shown++;
+        }
+    });
+
+    // While searching, only users are shown, not the admin's own card
+    const selfCard = adminUserList.querySelector(".admin-self-card");
+
+    if (selfCard) {
+        showCardInSearch(selfCard, !query, false);
+    }
+
+    if (!query) {
+        adminSearchInfo.textContent = "";
+    } else if (shown === 0) {
+        adminSearchInfo.textContent = "No users found";
+    } else {
+        adminSearchInfo.textContent = `${shown} of ${cards.length} users`;
+    }
 }
 
 async function createGroupIfNeeded(groupName) {
@@ -375,77 +437,135 @@ async function createGroupIfNeeded(groupName) {
     return groupId;
 }
 
+// Creates the Firebase login (without signing the admin out) and returns its uid.
+// Used by the Create User box and by the console.
+async function createLogin(username, password) {
+    const credential = await userCreatorAuth.createUserWithEmailAndPassword(
+        usernameToEmail(username),
+        padPassword(password)
+    );
+
+    await userCreatorAuth.signOut();
+    return credential.user.uid;
+}
+
+// Deletes the user's Firebase login. There's no server, so this signs in as
+// the user on the second app (the admin stays logged in) with their saved
+// password and deletes the account. Returns false if that isn't possible.
+async function deleteLogin(username, password) {
+    if (!username || !password) {
+        return false;
+    }
+
+    try {
+        const credential = await userCreatorAuth.signInWithEmailAndPassword(
+            usernameToEmail(username),
+            padPassword(password)
+        );
+
+        await credential.user.delete();
+        return true;
+    } catch (error) {
+        // auth/user-not-found means the login is already gone
+        if (error.code === "auth/user-not-found") {
+            return true;
+        }
+
+        console.error("Error deleting login:", error);
+        return false;
+    } finally {
+        await userCreatorAuth.signOut().catch(() => {});
+    }
+}
+
+// Saves the user's profile and their password for the admin card
+async function linkUserToGroup(uid, username, password, groupId) {
+    await db.collection("users").doc(uid).set({
+        username: username,
+        groupId: groupId,
+        blocked: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Every new user gets their password saved on their card
+    await db.collection("adminNotes").doc(uid).set({
+        notes: password
+    });
+}
+
 async function createUser() {
     const username = newUserUsername.value.trim().toLowerCase();
     const password = newUserPassword.value;
     let groupId = newUserGroup.value;
 
-    adminMessage.textContent = "";
+    clearAdminMessage();
 
     if (!/^[a-z0-9._-]+$/.test(username)) {
-        adminMessage.textContent = "Username can only use a-z, 0-9, dot, dash and underscore.";
+        typeAdminMessage("Username can only use a-z, 0-9, dot, dash and underscore.", true);
         return;
     }
 
     if (password === "") {
-        adminMessage.textContent = "Please enter a password.";
+        typeAdminMessage("Please enter a password.", true);
         return;
     }
 
     if (!groupId) {
-        adminMessage.textContent = "Please choose a group.";
+        typeAdminMessage("Please choose a group.", true);
         return;
     }
 
     if (groupId === NEW_GROUP_VALUE && newGroupName.value.trim() === "") {
-        adminMessage.textContent = "Please enter a name for the new group.";
+        typeAdminMessage("Please enter a name for the new group.", true);
         return;
     }
 
     createUserButton.disabled = true;
 
+    // The creation runs as a little "process" log, one step at a time
+    const groupLabel = groupId === NEW_GROUP_VALUE
+        ? toGroupId(newGroupName.value)
+        : groupId;
+
+    startProcessLog();
+    const credentialStep = await logStep("Generating credentials...");
+
     let uid;
 
     try {
-        const credential = await userCreatorAuth.createUserWithEmailAndPassword(
-            usernameToEmail(username),
-            padPassword(password)
-        );
-
-        uid = credential.user.uid;
-        await userCreatorAuth.signOut();
+        uid = await createLogin(username, password);
+        logResult(credentialStep, true);
     } catch (error) {
         console.error("Error creating login:", error);
+        logResult(credentialStep, false);
 
-        adminMessage.textContent = error.code === "auth/email-already-in-use"
+        await logStep(error.code === "auth/email-already-in-use"
             ? `The username "${username}" is already taken.`
-            : "Could not create the login.";
+            : "Could not create the login.", "process-error");
 
         createUserButton.disabled = false;
         return;
     }
+
+    const groupStep = await logStep(`Injecting into group ${groupLabel}...`);
 
     try {
         if (groupId === NEW_GROUP_VALUE) {
             groupId = await createGroupIfNeeded(newGroupName.value);
         }
 
-        await db.collection("users").doc(uid).set({
-            username: username,
-            groupId: groupId,
-            blocked: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Every new user gets a note with their password
-        await db.collection("adminNotes").doc(uid).set({
-            notes: `Password: ${password}`
-        });
+        await linkUserToGroup(uid, username, password, groupId);
+        logResult(groupStep, true);
     } catch (error) {
         console.error("Error linking user to group:", error);
-        adminMessage.textContent =
+        logResult(groupStep, false);
+
+        await logStep(
             `The login "${username}" was created, but could not be linked to a group. ` +
-            "Delete it in the Firebase console and try again.";
+            "Delete it in the Firebase console and try again.",
+            "process-error"
+        );
+
         createUserButton.disabled = false;
         return;
     }
@@ -455,7 +575,7 @@ async function createUser() {
     newGroupName.value = "";
     createUserButton.disabled = false;
 
-    adminMessage.textContent = `Created "${username}".`;
+    await logStep(`ACCESS GRANTED: ${username}`, "process-granted");
 
     await loadAdminData();
 }
@@ -476,13 +596,19 @@ async function removeUser(uid) {
 
     const confirmed = confirm(
         `Remove "${user.username}" from MoviePicker?\n\n` +
-        "Their group's movies are kept. The login itself must also be " +
-        "deleted in the Firebase console under Authentication → Users."
+        "Their login is deleted too. Their group's movies are kept."
     );
 
     if (!confirmed) {
         return;
     }
+
+    // The card melts away while the user is being removed
+    const card = adminUserList.querySelector(`.admin-user-card[data-uid="${uid}"]`);
+    const wipe = card ? playWipe(card) : Promise.resolve();
+
+    // The login goes first, while the saved password is still there
+    const loginDeleted = await deleteLogin(user.username, passwordFromNote(adminNotes[uid]));
 
     try {
         await db.collection("users").doc(uid).delete();
@@ -490,15 +616,27 @@ async function removeUser(uid) {
     } catch (error) {
         console.error("Error removing user:", error);
         alert("Could not remove the user.");
+        await loadAdminData();
         return;
     }
 
+    await wipe;
     await loadAdminData();
+
+    if (!loginDeleted) {
+        typeAdminMessage(
+            `${user.username} is removed, but the login could not be deleted (wrong or missing saved password). ` +
+            "Delete it in the Firebase console under Authentication → Users.",
+            true
+        );
+    }
 }
 
 newUserGroup.addEventListener("change", () => {
     newGroupName.classList.toggle("hidden", newUserGroup.value !== NEW_GROUP_VALUE);
 });
+
+adminUserSearch.addEventListener("input", () => filterAdminUsers(true));
 
 createUserButton.addEventListener("click", createUser);
 
@@ -507,9 +645,14 @@ adminUserList.addEventListener("change", async event => {
         return;
     }
 
-    const uid = event.target.closest(".admin-user-card").dataset.uid;
+    const card = event.target.closest(".admin-user-card");
+    const uid = card.dataset.uid;
+
+    // A progress bar runs across the card while the user moves group
+    const transfer = playTransfer(card);
 
     if (await updateUser(uid, { groupId: event.target.value })) {
+        await transfer;
         await loadAdminData();
     }
 });
@@ -523,25 +666,14 @@ adminUserList.addEventListener("click", async event => {
 
     const uid = card.dataset.uid;
 
-    if (event.target.classList.contains("admin-save-notes-button")) {
-        const notes = card.querySelector(".admin-notes").value;
-
-        try {
-            await db.collection("adminNotes").doc(uid).set({ notes: notes });
-            event.target.textContent = "Saved ✓";
-            setTimeout(() => event.target.textContent = "Save", 1500);
-        } catch (error) {
-            console.error("Error saving notes:", error);
-            alert("Could not save notes.");
-        }
-
-        return;
-    }
-
     if (event.target.classList.contains("admin-block-button")) {
         const user = adminUsers.find(user => user.uid === uid);
 
+        // A LOCKED / UNLOCKED stamp slams onto the card first
+        const lockdown = playLockdown(card, !user.blocked);
+
         if (await updateUser(uid, { blocked: !user.blocked })) {
+            await lockdown;
             await loadAdminData();
         }
 
@@ -555,11 +687,48 @@ adminUserList.addEventListener("click", async event => {
 
 adminLogoutButton.addEventListener("click", async () => {
     stopMatrixRain();
+    stopSystemLog();
+    stopUptime();
     await auth.signOut();
 
     adminUserList.innerHTML = "";
-    adminMessage.textContent = "";
+    clearConsole();
+    consoleSuggestions.innerHTML = "";
+    clearAdminMessage();
+    adminUserSearch.value = "";
+    adminSearchInfo.textContent = "";
     usernameInput.value = "";
     passwordInput.value = "";
     loginError.textContent = "";
+});
+
+/* //Phone menu: Create / Home / Console (only shown on small screens)\ */
+
+const adminNav = document.getElementById("adminNav");
+const adminNavButtons = [...adminNav.querySelectorAll(".admin-nav-button")];
+
+function setAdminPanel(panel) {
+    adminSection.dataset.panel = panel;
+
+    adminNavButtons.forEach((button, index) => {
+        const active = button.dataset.panel === panel;
+        button.classList.toggle("is-active", active);
+
+        if (active) {
+            adminNav.style.setProperty("--marker-index", index);
+        }
+    });
+
+    // The boxes of the chosen tab boot up again
+    adminSection.querySelectorAll(`.admin-card[data-panel="${panel}"]`).forEach(card => {
+        card.classList.remove("panel-enter");
+        void card.offsetWidth;
+        card.classList.add("panel-enter");
+    });
+
+    window.scrollTo(0, 0);
+}
+
+adminNavButtons.forEach(button => {
+    button.addEventListener("click", () => setAdminPanel(button.dataset.panel));
 });
