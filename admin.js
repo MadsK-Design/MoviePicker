@@ -244,6 +244,7 @@ async function showAdminPage() {
     startMatrixRain();
     startSystemLog();
     startUptime();
+    startConsole();
 
     const intro = startHackIntro();
 
@@ -640,6 +641,8 @@ adminLogoutButton.addEventListener("click", async () => {
     await auth.signOut();
 
     adminUserList.innerHTML = "";
+    consoleOutput.textContent = "";
+    consoleSuggestions.innerHTML = "";
     clearAdminMessage();
     adminUserSearch.value = "";
     adminSearchInfo.textContent = "";
