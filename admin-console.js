@@ -6,6 +6,8 @@ const consoleOutput = document.getElementById("consoleOutput");
 const consoleInput = document.getElementById("consoleInput");
 const consolePrompt = document.getElementById("consolePrompt");
 const consoleSuggestions = document.getElementById("consoleSuggestions");
+const consoleLive = document.getElementById("consoleLive");
+const consoleTyped = document.getElementById("consoleTyped");
 
 const consoleState = {
     mode: "root",          // "root" | "group" | "edit"
@@ -20,13 +22,37 @@ const consoleState = {
 
 /* ---------- Writing to the screen ---------- */
 
+// Printed lines go in above the line you are typing on, like in a terminal
 function consolePrint(text = "", className = "") {
     const line = document.createElement("div");
     line.className = `console-line ${className}`;
     line.textContent = text;
-    consoleOutput.appendChild(line);
+    consoleOutput.insertBefore(line, consoleLive);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
     return line;
+}
+
+function clearConsole() {
+    consoleOutput.querySelectorAll(".console-line").forEach(line => line.remove());
+}
+
+// Draws what has been typed after the prompt, with a block cursor where the
+// caret is. The real (invisible) input keeps the text and the caret.
+function renderLive() {
+    const text = consoleInput.value;
+    const caret = consoleInput.selectionStart ?? text.length;
+
+    consoleTyped.textContent = "";
+    consoleTyped.append(text.slice(0, caret));
+
+    const cursor = document.createElement("span");
+    cursor.className = "console-cursor";
+    cursor.textContent = text[caret] || " ";
+    consoleTyped.append(cursor, text.slice(caret + 1));
+
+    // While a command is running, the prompt line waits (like a real terminal)
+    consoleLive.classList.toggle("hidden", consoleState.busy);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
 async function consoleType(text, className = "", speed = 12) {
@@ -58,6 +84,7 @@ function setPrompt() {
             : `~/${consoleState.group.id}/edit`;
 
     consolePrompt.textContent = consoleState.ask ? ">" : `root@moviepicker:${path}$`;
+    renderLive();
 }
 
 function ask(question, handler, className = "console-warn") {
@@ -249,6 +276,7 @@ function renderSuggestions() {
 
 async function openGroup(group) {
     consoleInput.value = "";
+    lastConsoleValue = "";
     consoleState.group = { id: group.id, name: group.name || group.id };
     consoleState.mode = "group";
     consoleState.highlighted = 0;
@@ -742,7 +770,7 @@ async function runConsole(text) {
         }
 
         if (command === "clear") {
-            consoleOutput.textContent = "";
+            clearConsole();
             return;
         }
 
@@ -762,7 +790,7 @@ async function runConsole(text) {
     consolePrint(`> ${trimmed}`, "console-echo");
 
     if (command === "help") return printHelp();
-    if (command === "clear") { consoleOutput.textContent = ""; return; }
+    if (command === "clear") { clearConsole(); return; }
     if (command === "exit") return backToRoot();
 
     if (command === "back") {
@@ -786,10 +814,31 @@ async function runConsole(text) {
     await runEditCommand(command, rest);
 }
 
+// Text added in one go (paste, autocomplete, dictation) can leave the caret
+// at the start; when the text simply grew at the end, keep the caret there
+let lastConsoleValue = "";
+
 consoleInput.addEventListener("input", () => {
+    const value = consoleInput.value;
+
+    if (consoleInput.selectionStart === 0 && value.length > lastConsoleValue.length && value.startsWith(lastConsoleValue)) {
+        consoleInput.setSelectionRange(value.length, value.length);
+    }
+
+    lastConsoleValue = value;
     consoleState.highlighted = 0;
     renderSuggestions();
+    renderLive();
 });
+
+// Moving the caret with ← → (or tapping) moves the block cursor too
+["keyup", "click", "select"].forEach(type => {
+    consoleInput.addEventListener(type, renderLive);
+});
+
+// The cursor only blinks while the terminal has focus
+consoleInput.addEventListener("focus", () => consoleOutput.classList.add("is-focused"));
+consoleInput.addEventListener("blur", () => consoleOutput.classList.remove("is-focused"));
 
 consoleInput.addEventListener("keydown", async event => {
     const showing = consoleSuggestions.querySelectorAll(".console-suggestion");
@@ -805,6 +854,7 @@ consoleInput.addEventListener("keydown", async event => {
 
     if (event.key === "Escape") {
         consoleInput.value = "";
+        lastConsoleValue = "";
         if (consoleState.mode !== "root" && !consoleState.ask) backToRoot();
         renderSuggestions();
         return;
@@ -814,24 +864,32 @@ consoleInput.addEventListener("keydown", async event => {
         event.preventDefault();
         const text = consoleInput.value;
         consoleInput.value = "";
+        lastConsoleValue = "";
         consoleState.busy = true;
+        renderLive();
 
         try {
             await runConsole(text);
         } finally {
             consoleState.busy = false;
             renderSuggestions();
+            renderLive();
         }
     }
 });
 
-// Tapping anywhere on the terminal puts the cursor in the input line
-consoleOutput.addEventListener("click", () => consoleInput.focus());
+// Clicking anywhere on the terminal lets you type in it (without jumping the page)
+consoleOutput.addEventListener("click", event => {
+    if (!event.target.closest(".console-suggestion")) {
+        consoleInput.focus({ preventScroll: true });
+    }
+});
 
 // Called when the admin page opens
 function startConsole() {
-    consoleOutput.textContent = "";
+    clearConsole();
     consoleInput.value = "";
+    lastConsoleValue = "";
     consoleState.ask = null;
     consoleState.busy = false;
     backToRoot();

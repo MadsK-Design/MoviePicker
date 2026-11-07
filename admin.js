@@ -245,6 +245,7 @@ async function showAdminPage() {
     startSystemLog();
     startUptime();
     startConsole();
+    setAdminPanel("home");
 
     const intro = startHackIntro();
 
@@ -641,7 +642,7 @@ adminLogoutButton.addEventListener("click", async () => {
     await auth.signOut();
 
     adminUserList.innerHTML = "";
-    consoleOutput.textContent = "";
+    clearConsole();
     consoleSuggestions.innerHTML = "";
     clearAdminMessage();
     adminUserSearch.value = "";
@@ -649,4 +650,35 @@ adminLogoutButton.addEventListener("click", async () => {
     usernameInput.value = "";
     passwordInput.value = "";
     loginError.textContent = "";
+});
+
+/* //Phone menu: Create / Home / Console (only shown on small screens)\ */
+
+const adminNav = document.getElementById("adminNav");
+const adminNavButtons = [...adminNav.querySelectorAll(".admin-nav-button")];
+
+function setAdminPanel(panel) {
+    adminSection.dataset.panel = panel;
+
+    adminNavButtons.forEach((button, index) => {
+        const active = button.dataset.panel === panel;
+        button.classList.toggle("is-active", active);
+
+        if (active) {
+            adminNav.style.setProperty("--marker-index", index);
+        }
+    });
+
+    // The boxes of the chosen tab boot up again
+    adminSection.querySelectorAll(`.admin-card[data-panel="${panel}"]`).forEach(card => {
+        card.classList.remove("panel-enter");
+        void card.offsetWidth;
+        card.classList.add("panel-enter");
+    });
+
+    window.scrollTo(0, 0);
+}
+
+adminNavButtons.forEach(button => {
+    button.addEventListener("click", () => setAdminPanel(button.dataset.panel));
 });

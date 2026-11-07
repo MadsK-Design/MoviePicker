@@ -451,7 +451,7 @@
         </button>
     </div>
 
-    <section class="admin-card">
+    <section class="admin-card admin-create-card" data-panel="create">
 
         <h2>Create User</h2>
 
@@ -483,7 +483,7 @@
 
     </section>
 
-    <section class="admin-card admin-search-card">
+    <section class="admin-card admin-search-card" data-panel="home">
 
         <h2>Search User</h2>
 
@@ -497,7 +497,7 @@
 
     </section>
 
-    <section class="admin-card admin-log-card">
+    <section class="admin-card admin-log-card" data-panel="console">
 
         <h2>System Log</h2>
 
@@ -505,7 +505,7 @@
 
     </section>
 
-    <section class="admin-card admin-users-card">
+    <section class="admin-card admin-users-card" data-panel="home">
 
         <h2>Users</h2>
 
@@ -513,27 +513,61 @@
 
     </section>
 
-    <section class="admin-card admin-console-card">
+    <section class="admin-card admin-console-card" data-panel="console">
 
         <h2>Console</h2>
 
-        <div id="consoleOutput" class="console-output" aria-live="polite"></div>
-
-        <div class="console-input-row">
-            <span id="consolePrompt" class="console-prompt">root@moviepicker:~$</span>
-            <input
-                type="text"
-                id="consoleInput"
-                class="console-input"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-                aria-label="Console command">
+        <!-- You type straight into the terminal: the line you type on and the
+             suggestions live inside it, after everything already printed -->
+        <div id="consoleOutput" class="console-output" aria-live="polite">
+            <div id="consoleLive" class="console-live"><span id="consolePrompt" class="console-prompt">root@moviepicker:~$</span> <span id="consoleTyped" class="console-typed"></span></div>
+            <div id="consoleSuggestions" class="console-suggestions"></div>
         </div>
 
-        <div id="consoleSuggestions" class="console-suggestions"></div>
+        <!-- Invisible: it receives the keys (and opens the phone keyboard) -->
+        <input
+            type="text"
+            id="consoleInput"
+            class="console-input"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            aria-label="Console command">
 
     </section>
+
+    <!-- Menu at the bottom on phones -->
+    <nav id="adminNav" class="admin-nav" aria-label="Admin sections">
+        <span class="admin-nav-marker" aria-hidden="true"></span>
+
+        <button type="button" class="admin-nav-button" data-panel="create" aria-label="Create user">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="8" r="4" />
+                <path d="M2 21c0-4 3-7 7-7s7 3 7 7" />
+                <path d="M19 8v6M16 11h6" />
+            </svg>
+            <span>Create</span>
+        </button>
+
+        <button type="button" class="admin-nav-button" data-panel="home" aria-label="Users">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 11 12 4l9 7" />
+                <path d="M5 10v10h14V10" />
+                <path d="M10 20v-5h4v5" />
+            </svg>
+            <span>Home</span>
+        </button>
+
+        <button type="button" class="admin-nav-button" data-panel="console" aria-label="Console">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m6 9 4 3-4 3" />
+                <path d="M12 16h6" />
+            </svg>
+            <span>Console</span>
+        </button>
+    </nav>
 
 </div>
 
