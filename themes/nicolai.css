@@ -774,23 +774,47 @@ body[data-theme="nicolai"] #listFilterMinutes:focus {
 .scare-sub {
     position: relative;
     z-index: 3;
-    margin: 0;
+    margin: 6px 0 0;
+    padding: 6px 14px;
 
-    color: #d8c8b8;
+    color: #f3e6d6;
     font-family: "Special Elite", monospace;
-    font-size: 16px;
-    letter-spacing: 1px;
-    text-shadow: 0 0 8px #000, 0 0 4px #000, 0 0 2px #000;
-    padding: 4px 10px;
-    background: rgba(0, 0, 0, .55);
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    text-shadow:
+        0 0 2px #000,
+        0 0 6px #000,
+        0 0 14px rgba(200, 0, 0, .9),
+        0 0 28px rgba(200, 0, 0, .6);
+
+    background: rgba(0, 0, 0, .7);
     border-radius: 4px;
 
     opacity: 0;
-    animation: scare-fade-in .8s ease-out 1.6s forwards;
+    animation:
+        scare-sub-slam .35s cubic-bezier(.2, 1.8, .4, 1) 1.6s forwards,
+        scare-sub-pulse 1.2s ease-in-out 2s infinite;
 }
 
-@keyframes scare-fade-in {
-    to { opacity: 1; }
+/* The small text slams in with a jolt... */
+@keyframes scare-sub-slam {
+    0%   { opacity: 0; transform: scale(1.8); filter: blur(4px); }
+    100% { opacity: 1; transform: scale(1); filter: none; }
+}
+
+/* ...and then keeps pulsing so the eye catches it */
+@keyframes scare-sub-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .85; transform: scale(1.06); }
+}
+
+/* Step 5: the text comes sooner, right after the face has hit */
+.scare--frenzy .scare-sub {
+    animation-delay: .8s, 1.2s;
+}
 }
 
 /* Step 1: the poster fades in calmly */

@@ -165,7 +165,7 @@
         { image: "Movie poster.jpg", text: "WATCH ME", sub: "why won't you watch me?", mood: "angry", sound: "heartbeat", duration: 4800 },
         { image: "images.jpg", text: "I'm waiting…", mood: "creep", sound: "drone", duration: 5200 },
         { image: "images (1).jpg", text: "WATCH ME NOW", mood: "lunge", sound: "scream", duration: 2800, vibrate: [300, 80, 500] },
-        { image: "Sinister-2-Mr.-Boogie-aka-Bagul.avif", text: "WATCH ME", sub: "you can't hide from me", mood: "frenzy", sound: "scream", duration: 3200, vibrate: [200, 60, 200, 60, 700] }
+        { image: "Sinister-2-Mr.-Boogie-aka-Bagul.avif", text: "WATCH ME", sub: "you can't hide from me", mood: "frenzy", sound: "scream", duration: 5600, vibrate: [200, 60, 200, 60, 700] }
     ];
 
     const ACTIVE_TAPS = 5;            // this many taps...
