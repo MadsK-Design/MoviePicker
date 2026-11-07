@@ -23,6 +23,7 @@ let selectedMovieList = "All";
 let movieBeingAddedToListsId = null;
 let selectedListsForNewMovie = [];
 let addToListMode = "existing";
+let listBeingRenamed = null;
 
 
 
@@ -57,21 +58,24 @@ const newGenreName = document.getElementById("newGenreName");
 const confirmGenreButton = document.getElementById("confirmGenreButton");
 const cancelGenreButton = document.getElementById("cancelGenreButton");
 const movieSearch = document.getElementById("movieSearch");
-const showAddSectionButton = document.getElementById("showAddSection");
-const showPickSectionButton = document.getElementById("showPickSection");
-const addSection = document.getElementById("addSection");
-const pickSection = document.getElementById("pickSection");
+const bottomNavButtons = document.querySelectorAll(".bottom-nav-button");
+const actionSections = document.querySelectorAll(".action-section");
 const toggleFiltersButton = document.getElementById("toggleFiltersButton");
 const filterSection = document.getElementById("filterSection");
-const showWatchedText = document.getElementById("showWatchedText");
 const addMovieListButton = document.getElementById("addMovieListButton");
 const movieListButtons = document.getElementById("movieListButtons");
+const movieListScroller = document.getElementById("movieListScroller");
+const movieListModalTitle = document.getElementById("movieListModalTitle");
+const listActionMenu = document.getElementById("listActionMenu");
+const renameListButton = document.getElementById("renameListButton");
+const deleteListButton = document.getElementById("deleteListButton");
 const movieListModal = document.getElementById("movieListModal");
 const newMovieListName = document.getElementById("newMovieListName");
-const newMovieListTag = document.getElementById("newMovieListTag");
+const newMovieListDescription = document.getElementById("newMovieListDescription");
 const confirmMovieListButton = document.getElementById("confirmMovieListButton");
 const cancelMovieListButton = document.getElementById("cancelMovieListButton");
 const currentMovieList = document.getElementById("currentMovieList");
+const moviesHeading = document.getElementById("moviesHeading");
 const addToListModal = document.getElementById("addToListModal");
 const addToListOptions = document.getElementById("addToListOptions");
 const saveMovieListsButton = document.getElementById("saveMovieListsButton");
@@ -165,6 +169,16 @@ async function addMovie() {
 
 function renderMovies() {
     movieList.innerHTML = "";
+
+    // The heading shows the chosen category's name, with its description below
+    const selectedList = movieLists.find(list => list.Lists === selectedMovieList);
+
+    moviesHeading.textContent = selectedMovieList === "All"
+        ? "All Movies"
+        : selectedMovieList;
+
+    currentMovieList.textContent = selectedList?.Description || "";
+    currentMovieList.classList.toggle("hidden", !currentMovieList.textContent);
 
     const filteredMovies = getFilteredMoviesForList();
 
@@ -666,86 +680,175 @@ function renderMovieListButtons() {
     movieListButtons.appendChild(allButton);
 
     movieLists.forEach(list => {
-        const wrapper = document.createElement("div");
-        wrapper.classList.add("movie-list-button-wrapper");
-
         const button = document.createElement("button");
 
         button.type = "button";
-        button.classList.add("movie-list-button");
+        button.classList.add("movie-list-button", "custom-list-button");
         button.dataset.list = list.Lists;
-        button.textContent = list.Tag;
+        button.dataset.id = list.Id;
+        button.textContent = list.Lists;
+
+        // Each button shakes a little out of step with the others
+        button.style.animationDelay = `-${(Math.random() * 0.3).toFixed(2)}s`;
 
         if (selectedMovieList === list.Lists) {
             button.classList.add("active-movie-list");
         }
 
-        const deleteButton = document.createElement("button");
-
-        deleteButton.type = "button";
-        deleteButton.classList.add("delete-movie-list-button");
-        deleteButton.dataset.id = list.Id;
-        deleteButton.dataset.name = list.Lists;
-        deleteButton.textContent = "×";
-        deleteButton.setAttribute(
-            "aria-label",
-            `Delete ${list.Lists}`
-        );
-
-        wrapper.appendChild(button);
-        wrapper.appendChild(deleteButton);
-
-        movieListButtons.appendChild(wrapper);
+        movieListButtons.appendChild(button);
     });
 }
 
 function openMovieListModal() {
 
+    listBeingRenamed = null;
+
+    movieListModalTitle.textContent = "Create Movie List";
+    confirmMovieListButton.textContent = "Create List";
+
     newMovieListName.value = "";
-    newMovieListTag.value = "";
+    newMovieListDescription.value = "";
+
+    movieListModal.classList.remove("hidden");
+}
+
+function openRenameListModal(list) {
+
+    listBeingRenamed = list;
+
+    movieListModalTitle.textContent = "Rename Movie List";
+    confirmMovieListButton.textContent = "Save";
+
+    newMovieListName.value = list.Lists;
+    newMovieListDescription.value = list.Description || "";
 
     movieListModal.classList.remove("hidden");
 }
 
 function closeMovieListModal() {
     movieListModal.classList.add("hidden");
+    listBeingRenamed = null;
 }
 
-async function saveNewMovieList() {
+// The same window is used to create and to rename a list
+function saveMovieListModal() {
+    if (listBeingRenamed) {
+        renameMovieList();
+    } else {
+        saveNewMovieList();
+    }
+}
+
+// Shared checks for create and rename. Returns { listName, description } or null.
+function readMovieListModal(ignoreId) {
 
     const listName = newMovieListName.value.trim();
-    let tagName = newMovieListTag.value.trim();
+    const description = newMovieListDescription.value.trim();
 
     if (listName === "") {
         alert("Please enter a list name.");
-        return;
+        return null;
     }
 
-    if (tagName === "") {
-        tagName = listName.substring(0, 12);
-    }
-
-    if (tagName.length > 12) {
-        alert("Button tag can only contain 12 characters.");
-        return;
+    if (listName.length > 12) {
+        alert("The name can only contain 12 characters.");
+        return null;
     }
 
     if (listName.toLowerCase() === "all") {
         alert('"All" is reserved.');
-        return;
+        return null;
     }
 
     const exists = movieLists.some(list =>
+        list.Id !== ignoreId &&
         list.Lists.toLowerCase() === listName.toLowerCase()
     );
 
     if (exists) {
         alert("List already exists.");
+        return null;
+    }
+
+    return { listName, description };
+}
+
+async function renameMovieList() {
+
+    const list = listBeingRenamed;
+    const values = readMovieListModal(list.Id);
+
+    if (!values) {
         return;
     }
 
+    const success = await renameMovieListInDatabase(
+        list.Id,
+        list.Lists,
+        values.listName,
+        values.description
+    );
+
+    if (!success) {
+        return;
+    }
+
+    if (selectedMovieList === list.Lists) {
+        selectedMovieList = values.listName;
+    }
+
+    closeMovieListModal();
+
+    await loadMovieLists();
+    await loadMovies();
+}
+
+async function deleteMovieList(list) {
+
+    const confirmed = confirm(
+        `Delete the list "${list.Lists}"?\n\n` +
+        "The list will also be removed from all movies."
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    const removedFromMovies =
+        await removeListFromAllMovies(list.Lists);
+
+    if (!removedFromMovies) {
+        alert("The list could not be removed from the movies.");
+        return;
+    }
+
+    const deleted =
+        await deleteMovieListFromDatabase(list.Id);
+
+    if (!deleted) {
+        return;
+    }
+
+    if (selectedMovieList === list.Lists) {
+        selectedMovieList = "All";
+    }
+
+    await loadMovieLists();
+    await loadMovies();
+}
+
+async function saveNewMovieList() {
+
+    const values = readMovieListModal(null);
+
+    if (!values) {
+        return;
+    }
+
+    const { listName, description } = values;
+
     const success =
-        await addMovieListToDatabase(listName, tagName);
+        await addMovieListToDatabase(listName, description);
 
     if (!success) {
         alert("Could not create list.");
@@ -849,7 +952,7 @@ function renderListOptions(selectedLists = []) {
                     value="${list.Lists}"
                     ${checked ? "checked" : ""}>
 
-                ${list.Tag}
+                ${list.Lists}
             `;
 
             addToListOptions.appendChild(label);
@@ -913,10 +1016,6 @@ addToListOptions.addEventListener("click", event => {
 
 
 showWatchedCheckbox.addEventListener("change", () => {
-
-    showWatchedText.textContent = showWatchedCheckbox.checked
-        ? "Hide Watched"
-        : "Show Watched";
 
     renderMovies();
 
@@ -1087,38 +1186,33 @@ editModal.addEventListener("keydown", event => {
     }
 });
 
-showAddSectionButton.addEventListener("click", () => {
-    const isActive = showAddSectionButton.classList.contains("active-tab");
+function showSection(sectionId) {
+    actionSections.forEach(section => {
+        section.classList.toggle("show-section", section.id === sectionId);
+    });
 
-    addSection.classList.toggle("show-section", !isActive);
-    pickSection.classList.remove("show-section");
+    bottomNavButtons.forEach(button => {
+        button.classList.toggle("active-tab", button.dataset.section === sectionId);
+    });
 
-    showAddSectionButton.classList.toggle("active-tab", !isActive);
-    showPickSectionButton.classList.remove("active-tab");
-});
+    setListEditMode(false);
 
-showPickSectionButton.addEventListener("click", () => {
-    const isActive = showPickSectionButton.classList.contains("active-tab");
+    window.scrollTo(0, 0);
+}
 
-    pickSection.classList.toggle("show-section", !isActive);
-    addSection.classList.remove("show-section");
-
-    showPickSectionButton.classList.toggle("active-tab", !isActive);
-    showAddSectionButton.classList.remove("active-tab");
+bottomNavButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        showSection(button.dataset.section);
+    });
 });
 
 
 toggleFiltersButton.addEventListener("click", () => {
 
-    filterSection.classList.toggle("show-filter-section");
+    const isOpen = filterSection.classList.toggle("show-filter-section");
 
-    toggleFiltersButton.classList.toggle("active-filter");
-
-    if (filterSection.classList.contains("show-filter-section")) {
-        toggleFiltersButton.textContent = "Hide Filter";
-    } else {
-        toggleFiltersButton.textContent = "Find Movies";
-    }
+    toggleFiltersButton.classList.toggle("active-filter", isOpen);
+    toggleFiltersButton.setAttribute("aria-expanded", isOpen);
 
 });
 
@@ -1134,72 +1228,264 @@ cancelMovieListButton.addEventListener(
 
 confirmMovieListButton.addEventListener(
     "click",
-    saveNewMovieList
+    saveMovieListModal
 );
 
 newMovieListName.addEventListener("keydown", event => {
     if (event.key === "Enter") {
-        saveNewMovieList();
+        saveMovieListModal();
     }
 });
 
-movieListButtons.addEventListener("click", async event => {
-    const deleteButton = event.target.closest(
-        ".delete-movie-list-button"
-    );
+/* //List row: scrolling, edit mode and reordering\\ */
 
-    if (deleteButton) {
-        const id = deleteButton.dataset.id;
-        const listName = deleteButton.dataset.name;
+// Long press a list → all lists shake (edit mode).
+// In edit mode: tap a list → Rename/Delete menu,
+// long press a list → blue ring, then drag it to a new place.
+// Tapping outside the row leaves edit mode.
 
-        const confirmed = confirm(
-            `Delete the list "${listName}"?\n\n` +
-            "The list will also be removed from all movies."
-        );
+const LONG_PRESS_MS = 450;
 
-        if (!confirmed) {
-            return;
-        }
+let isEditingLists = false;
+let listPressTimer = null;
+let listPressStartX = 0;
+let pressedListButton = null;
+let listPressWasLong = false;
+let reorderingListButton = null;
+let listOrderBeforeDrag = "";
+let rowDragStart = null;
+let listsWereDragged = false;
+let listForActionMenu = null;
 
-        const removedFromMovies =
-            await removeListFromAllMovies(listName);
+function setListEditMode(on) {
+    isEditingLists = on;
+    movieListScroller.classList.toggle("editing-lists", on);
 
-        if (!removedFromMovies) {
-            alert("The list could not be removed from the movies.");
-            return;
-        }
+    if (!on) {
+        closeListActionMenu();
+    }
+}
 
-        const deleted =
-            await deleteMovieListFromDatabase(id);
+function getCustomListIds() {
+    return [...movieListButtons.querySelectorAll(".custom-list-button")]
+        .map(button => button.dataset.id);
+}
 
-        if (!deleted) {
-            return;
-        }
+function onListLongPress() {
+    listPressTimer = null;
+    listPressWasLong = true;
 
-        if (selectedMovieList === listName) {
-            selectedMovieList = "All";
-        }
-
-        await loadMovieLists();
-        await loadMovies();
-
+    if (!isEditingLists) {
+        setListEditMode(true);
         return;
     }
 
+    closeListActionMenu();
+
+    reorderingListButton = pressedListButton;
+    reorderingListButton.classList.add("reordering");
+    listOrderBeforeDrag = getCustomListIds().join(",");
+
+    // While moving a list, the row itself should not scroll with the mouse
+    rowDragStart = null;
+}
+
+function moveReorderingListButton(pointerX) {
+    const otherButtons = [...movieListButtons.querySelectorAll(".custom-list-button")]
+        .filter(button => button !== reorderingListButton);
+
+    const buttonAfter = otherButtons.find(button => {
+        const box = button.getBoundingClientRect();
+        return pointerX < box.left + box.width / 2;
+    });
+
+    if (buttonAfter) {
+        movieListButtons.insertBefore(reorderingListButton, buttonAfter);
+    } else {
+        movieListButtons.appendChild(reorderingListButton);
+    }
+
+    // Scroll the row when dragging near its edges
+    const rowBox = movieListScroller.getBoundingClientRect();
+
+    if (pointerX < rowBox.left + 30) {
+        movieListScroller.scrollLeft -= 10;
+    } else if (pointerX > rowBox.right - 30) {
+        movieListScroller.scrollLeft += 10;
+    }
+}
+
+async function saveListOrder() {
+    const ids = getCustomListIds();
+
+    if (ids.join(",") === listOrderBeforeDrag) {
+        return;
+    }
+
+    movieLists.sort((a, b) => ids.indexOf(a.Id) - ids.indexOf(b.Id));
+
+    await saveMovieListOrderToDatabase(ids);
+}
+
+function endListPress() {
+    clearTimeout(listPressTimer);
+    listPressTimer = null;
+
+    rowDragStart = null;
+    movieListScroller.classList.remove("dragging");
+
+    if (reorderingListButton) {
+        reorderingListButton.classList.remove("reordering");
+        reorderingListButton = null;
+        saveListOrder();
+    }
+}
+
+function openListActionMenu(button) {
+    listForActionMenu = movieLists.find(list => list.Id === button.dataset.id);
+
+    if (!listForActionMenu) {
+        return;
+    }
+
+    const box = button.getBoundingClientRect();
+
+    listActionMenu.style.left = `${Math.max(8, Math.min(box.left, window.innerWidth - 160))}px`;
+    listActionMenu.style.top = `${box.bottom + 6}px`;
+    listActionMenu.classList.remove("hidden");
+}
+
+function closeListActionMenu() {
+    listActionMenu.classList.add("hidden");
+    listForActionMenu = null;
+}
+
+movieListScroller.addEventListener("pointerdown", event => {
+    listsWereDragged = false;
+    listPressWasLong = false;
+    listPressStartX = event.clientX;
+
+    pressedListButton = event.target.closest(".custom-list-button");
+
+    if (pressedListButton) {
+        listPressTimer = setTimeout(onListLongPress, LONG_PRESS_MS);
+    }
+
+    // Fingers on a phone scroll the row natively, a mouse needs help
+    if (event.pointerType === "mouse") {
+        rowDragStart = {
+            x: event.clientX,
+            scrollLeft: movieListScroller.scrollLeft
+        };
+    }
+});
+
+window.addEventListener("pointermove", event => {
+    if (reorderingListButton) {
+        moveReorderingListButton(event.clientX);
+        return;
+    }
+
+    const distance = event.clientX - listPressStartX;
+
+    // Moving the finger before the long press finishes means scrolling
+    if (listPressTimer && Math.abs(distance) > 8) {
+        clearTimeout(listPressTimer);
+        listPressTimer = null;
+    }
+
+    if (rowDragStart) {
+        if (Math.abs(distance) > 5) {
+            listsWereDragged = true;
+            movieListScroller.classList.add("dragging");
+        }
+
+        movieListScroller.scrollLeft =
+            rowDragStart.scrollLeft - (event.clientX - rowDragStart.x);
+    }
+});
+
+window.addEventListener("pointerup", endListPress);
+window.addEventListener("pointercancel", endListPress);
+
+// Stop the phone from scrolling the row while a list is being moved
+movieListScroller.addEventListener("touchmove", event => {
+    if (reorderingListButton) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+// Stop the phone's long-press menu (copy, look up, …) on the list buttons
+movieListScroller.addEventListener("contextmenu", event => {
+    event.preventDefault();
+});
+
+// Letting go after a drag or a long press should not count as a tap
+movieListScroller.addEventListener("click", event => {
+    if (listsWereDragged || listPressWasLong) {
+        event.stopPropagation();
+        event.preventDefault();
+        listsWereDragged = false;
+        listPressWasLong = false;
+    }
+}, true);
+
+movieListButtons.addEventListener("click", event => {
     const listButton = event.target.closest(".movie-list-button");
 
     if (!listButton) {
         return;
     }
 
-    selectedMovieList = listButton.dataset.list;
+    if (isEditingLists) {
+        if (listButton.classList.contains("custom-list-button")) {
+            openListActionMenu(listButton);
+        }
 
-    currentMovieList.innerHTML =
-        `Current List: <em>${selectedMovieList}</em>`;
+        return;
+    }
+
+    selectedMovieList = listButton.dataset.list;
 
     renderMovieListButtons();
     renderMovies();
 });
+
+renameListButton.addEventListener("click", () => {
+    const list = listForActionMenu;
+
+    closeListActionMenu();
+
+    if (list) {
+        openRenameListModal(list);
+    }
+});
+
+deleteListButton.addEventListener("click", async () => {
+    const list = listForActionMenu;
+
+    closeListActionMenu();
+
+    if (list) {
+        await deleteMovieList(list);
+    }
+});
+
+// Tapping anywhere outside the row ends edit mode
+document.addEventListener("click", event => {
+    if (!isEditingLists) {
+        return;
+    }
+
+    if (event.target.closest("#movieListScroller, #listActionMenu, .modal")) {
+        return;
+    }
+
+    setListEditMode(false);
+});
+
+window.addEventListener("scroll", closeListActionMenu);
+
 
 saveMovieListsButton.addEventListener(
     "click",

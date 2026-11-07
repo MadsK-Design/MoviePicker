@@ -97,6 +97,9 @@ auth.onAuthStateChanged(async user => {
 
     GROUP_ID = profile.groupId;
 
+    // Always start on the movie list (home)
+    showSection("moviesSection");
+
     loginSection.classList.add("hidden");
     adminSection.classList.add("hidden");
     appSection.classList.remove("hidden");
