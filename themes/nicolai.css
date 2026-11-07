@@ -741,6 +741,13 @@ body[data-theme="nicolai"] #listFilterMinutes:focus {
     margin-top: -2vh;
 }
 
+/* Step 1: higher up on the plain white wall, no dark patch needed */
+.scare--calm .scare-blood-text {
+    margin-top: -16vh;
+    background: none;
+    filter: none;
+}
+
 .scare-letters {
     font-family: "Permanent Marker", "Creepster", cursive;
     letter-spacing: 2px;
