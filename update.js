@@ -32,7 +32,9 @@ async function checkForUpdate() {
         sessionStorage.setItem("triedVersion", version);
 
         // A new address makes the phone fetch a fresh page instead of its old copy
-        location.replace(`${location.pathname}?v=${version}`);
+        // (the second app keeps its "?admin", so it keeps its own login)
+        const secondApp = new URLSearchParams(location.search).has("admin") ? "admin&" : "";
+        location.replace(`${location.pathname}?${secondApp}v=${version}`);
     } catch (error) {
         console.error("Could not check for updates:", error);
     }
