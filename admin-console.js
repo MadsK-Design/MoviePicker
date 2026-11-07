@@ -497,6 +497,11 @@ function deleteUserFlow() {
         consoleState.busy = true;
 
         try {
+            // The login goes first, while the saved password is still there
+            const loginLine = await consoleType(`revoke login ${user.username} ... `, "console-dim");
+            const loginDeleted = await deleteLogin(user.username, passwordFromNote(adminNotes[user.uid]));
+            loginLine.textContent += loginDeleted ? "OK" : "FAILED";
+
             await consoleType(`rm users/${user.uid} ... `, "console-dim");
             await db.collection("users").doc(user.uid).delete();
             await consoleType(`rm adminNotes/${user.uid} ... `, "console-dim");
@@ -504,7 +509,15 @@ function deleteUserFlow() {
             await consoleProgress("  wiping traces", 12);
 
             await consoleType(`${user.username} is deleted.`, "console-ok");
-            consolePrint("Their list's movies are kept. The login itself must also be deleted in the Firebase console under Authentication → Users.", "console-warn");
+            consolePrint("Their list's movies are kept.", "console-dim");
+
+            if (!loginDeleted) {
+                consolePrint(
+                    "The login could not be deleted (wrong or missing saved password). " +
+                    "Delete it in the Firebase console under Authentication → Users.",
+                    "console-warn"
+                );
+            }
         } catch (error) {
             console.error("Console delete user failed:", error);
             consolePrint("FAILED: the user could not be deleted.", "console-error");

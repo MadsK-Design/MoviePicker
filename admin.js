@@ -449,6 +449,35 @@ async function createLogin(username, password) {
     return credential.user.uid;
 }
 
+// Deletes the user's Firebase login. There's no server, so this signs in as
+// the user on the second app (the admin stays logged in) with their saved
+// password and deletes the account. Returns false if that isn't possible.
+async function deleteLogin(username, password) {
+    if (!username || !password) {
+        return false;
+    }
+
+    try {
+        const credential = await userCreatorAuth.signInWithEmailAndPassword(
+            usernameToEmail(username),
+            padPassword(password)
+        );
+
+        await credential.user.delete();
+        return true;
+    } catch (error) {
+        // auth/user-not-found means the login is already gone
+        if (error.code === "auth/user-not-found") {
+            return true;
+        }
+
+        console.error("Error deleting login:", error);
+        return false;
+    } finally {
+        await userCreatorAuth.signOut().catch(() => {});
+    }
+}
+
 // Saves the user's profile and their password for the admin card
 async function linkUserToGroup(uid, username, password, groupId) {
     await db.collection("users").doc(uid).set({
@@ -567,8 +596,7 @@ async function removeUser(uid) {
 
     const confirmed = confirm(
         `Remove "${user.username}" from MoviePicker?\n\n` +
-        "Their group's movies are kept. The login itself must also be " +
-        "deleted in the Firebase console under Authentication → Users."
+        "Their login is deleted too. Their group's movies are kept."
     );
 
     if (!confirmed) {
@@ -578,6 +606,9 @@ async function removeUser(uid) {
     // The card melts away while the user is being removed
     const card = adminUserList.querySelector(`.admin-user-card[data-uid="${uid}"]`);
     const wipe = card ? playWipe(card) : Promise.resolve();
+
+    // The login goes first, while the saved password is still there
+    const loginDeleted = await deleteLogin(user.username, passwordFromNote(adminNotes[uid]));
 
     try {
         await db.collection("users").doc(uid).delete();
@@ -591,6 +622,14 @@ async function removeUser(uid) {
 
     await wipe;
     await loadAdminData();
+
+    if (!loginDeleted) {
+        typeAdminMessage(
+            `${user.username} is removed, but the login could not be deleted (wrong or missing saved password). ` +
+            "Delete it in the Firebase console under Authentication → Users.",
+            true
+        );
+    }
 }
 
 newUserGroup.addEventListener("change", () => {
