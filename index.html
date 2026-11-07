@@ -7,27 +7,29 @@
     <meta name="app-version" content="__VERSION__">
     <title>Movie Picker</title>
 
-    <!-- Lets the site be installed as an app on the home screen -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffffff">
-    <link rel="icon" href="icons/icon-192.png">
+    <!-- Lets the site be installed as an app on the home screen.
+         "?admin" is the second app (MP Admin) with its own name, icon and start
+         address. The tags are written here, before Safari reads them, so it
+         never sees the normal app's icon first. -->
+    <script>
+        (function () {
+            const secondApp = new URLSearchParams(location.search).has("admin");
+            const icon = file => `icons/${secondApp ? "admin-" : ""}${file}`;
+            const name = secondApp ? "MP Admin" : "Movie Picker";
 
-    <!-- iPhone reads these instead of the manifest -->
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+            document.write(`
+                <link rel="manifest" href="${secondApp ? "manifest-admin.json" : "manifest.json"}">
+                <link rel="icon" href="${icon("icon-192.png")}">
+                <link rel="apple-touch-icon" href="${icon("apple-touch-icon.png")}">
+                <meta name="apple-mobile-web-app-title" content="${name}">
+            `);
+
+            document.title = name;
+        })();
+    </script>
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Movie Picker">
-
-    <!-- "?admin" is the second app: its own name, icon and start address -->
-    <script>
-        if (new URLSearchParams(location.search).has("admin")) {
-            document.querySelector('link[rel="manifest"]').href = "manifest-admin.json";
-            document.querySelector('link[rel="apple-touch-icon"]').href = "icons/admin-apple-touch-icon.png";
-            document.querySelector('link[rel="icon"]').href = "icons/admin-icon-192.png";
-            document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "MP Admin";
-            document.title = "MP Admin";
-        }
-    </script>
     <!-- Full screen: the app draws behind the clock and battery (white text) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
