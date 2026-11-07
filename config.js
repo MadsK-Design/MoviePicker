@@ -12,10 +12,17 @@ const EMAIL_DOMAIN = "moviepicker.app";
 
 let GROUP_ID = "";
 
-firebase.initializeApp(firebaseConfig);
+// "?admin" in the address is the second app (the "MP Admin" icon). It runs
+// as its own Firebase app, so it keeps its own login: you can be logged in to
+// your list in the normal app and as admin in this one at the same time.
+const IS_SECOND_APP = new URLSearchParams(location.search).has("admin");
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const mainApp = IS_SECOND_APP
+    ? firebase.initializeApp(firebaseConfig, "secondApp")
+    : firebase.initializeApp(firebaseConfig);
+
+const auth = mainApp.auth();
+const db = mainApp.firestore();
 
 // Keep a copy of the data on the device, so the app opens instantly
 // and still shows movies with bad reception
