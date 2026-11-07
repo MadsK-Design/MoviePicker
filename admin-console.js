@@ -495,12 +495,17 @@ function deleteUserFlow() {
         }
 
         consoleState.busy = true;
+        let wipe = Promise.resolve();
 
         try {
             // The login goes first, while the saved password is still there
             const loginLine = await consoleType(`revoke login ${user.username} ... `, "console-dim");
             const loginDeleted = await deleteLogin(user.username, passwordFromNote(adminNotes[user.uid]));
             loginLine.textContent += loginDeleted ? "OK" : "FAILED";
+
+            // The user's card melts away, like with the Remove button
+            const card = adminUserList.querySelector(`.admin-user-card[data-uid="${user.uid}"]`);
+            wipe = card ? playWipe(card) : Promise.resolve();
 
             await consoleType(`rm users/${user.uid} ... `, "console-dim");
             await db.collection("users").doc(user.uid).delete();
@@ -523,6 +528,8 @@ function deleteUserFlow() {
             consolePrint("FAILED: the user could not be deleted.", "console-error");
         }
 
+        // Let the melt finish before the cards are redrawn
+        await wipe;
         consoleState.busy = false;
         await loadAdminData();
         enterMode("users");
