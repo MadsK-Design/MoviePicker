@@ -1,0 +1,22 @@
+/* ============================================
+   Design for the Silke-Mads list
+   ============================================
+
+   This file is only loaded when someone in the "silke-mads" group
+   logs in (mads, silke). Everything written here is added on top of
+   style.css, so you only need to write what should look different.
+
+   Examples (move them below this comment to try them):
+
+   body {
+       background: #fff5f8;
+   }
+
+   .bottom-nav .bottom-nav-button.active-tab {
+       background: #e91e63;
+   }
+
+   .movie-card {
+       border-color: #e91e63;
+   }
+*/

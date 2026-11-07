@@ -55,6 +55,8 @@ async function logoutUser() {
 }
 
 function showLogin() {
+    removeGroupTheme();
+
     loginSection.classList.remove("hidden");
     appSection.classList.add("hidden");
     adminSection.classList.add("hidden");
@@ -79,6 +81,8 @@ auth.onAuthStateChanged(async user => {
     }
 
     if (profile.admin === true) {
+        removeGroupTheme();
+
         loginSection.classList.add("hidden");
         appSection.classList.add("hidden");
         await showAdminPage();
@@ -97,14 +101,21 @@ auth.onAuthStateChanged(async user => {
 
     GROUP_ID = profile.groupId;
 
+    // The list's own design, if it has one (themes/<groupId>.css and .js)
+    await applyGroupTheme(GROUP_ID);
+
     // Always start on the movie list (home)
     showSection("moviesSection");
+
+    // The list's intro (if any) covers the screen while the movies load
+    const themeIntro = playGroupThemeIntro();
 
     loginSection.classList.add("hidden");
     adminSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
     await loadGroupData();
+    await themeIntro;
 });
 
 async function loadGroupData() {
