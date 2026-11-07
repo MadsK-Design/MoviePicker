@@ -22,6 +22,13 @@ When you're done, just ask Claude: **"remove the jumpscares"**.
 The rest of the horror theme (door intro, hallway, demon, blood splats on tap,
 fonts and colours) stays.
 
+## The pictures in Git history
+
+Deleting the folder removes the pictures from the current version and the
+website, but the repository is public, so they stay findable in older commits.
+Removing them **completely** means rewriting the history (e.g. `git filter-repo`
+on `themes/nicolai-scares/`) and force-pushing `main`. Only do that if asked.
+
 ## Reset on the phone (optional)
 
 The phone remembers how far the jumpscares have escalated, in local storage
