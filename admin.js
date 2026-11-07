@@ -339,6 +339,12 @@ function renderAdminUsers() {
                     ${user.blocked ? `<span class="admin-badge blocked">Blocked</span>` : ""}
                 </div>
 
+                <!-- Read-only: passwords can't be changed from here -->
+                <div class="admin-stats">
+                    <p><span>Password</span> ${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</p>
+                </div>
+
+                <!-- The only thing you change on a card; saves as soon as you pick a group -->
                 <label class="admin-field">
                     Group
                     <select class="admin-group-select">
@@ -346,14 +352,7 @@ function renderAdminUsers() {
                     </select>
                 </label>
 
-                <label class="admin-field">
-                    Password
-                    <input type="text" class="admin-notes" autocomplete="off"
-                           value="${escapeHtml(passwordFromNote(adminNotes[user.uid]))}">
-                </label>
-
                 <div class="admin-user-actions">
-                    <button type="button" class="admin-save-notes-button">Save</button>
                     <button type="button" class="admin-block-button">
                         ${user.blocked ? "Unblock" : "Block"}
                     </button>
@@ -528,21 +527,6 @@ adminUserList.addEventListener("click", async event => {
     }
 
     const uid = card.dataset.uid;
-
-    if (event.target.classList.contains("admin-save-notes-button")) {
-        const notes = card.querySelector(".admin-notes").value;
-
-        try {
-            await db.collection("adminNotes").doc(uid).set({ notes: notes });
-            event.target.textContent = "Saved ✓";
-            setTimeout(() => event.target.textContent = "Save", 1500);
-        } catch (error) {
-            console.error("Error saving notes:", error);
-            alert("Could not save notes.");
-        }
-
-        return;
-    }
 
     if (event.target.classList.contains("admin-block-button")) {
         const user = adminUsers.find(user => user.uid === uid);
