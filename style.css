@@ -1759,6 +1759,26 @@ body:has(#admin:not(.hidden)) {
     animation-delay: .25s, .85s;
 }
 
+#admin .admin-card:nth-of-type(3) {
+    animation-delay: .5s, 1.1s;
+}
+
+/* "2 of 5 users" under the search box */
+.admin-search-info {
+    min-height: 1em;
+    margin: 6px 5px 0;
+    color: #777;
+    font-size: 13px;
+}
+
+#admin .admin-search-info {
+    color: var(--hacker-dim);
+}
+
+#admin .admin-search-info:not(:empty)::before {
+    content: "> ";
+}
+
 @keyframes card-boot {
     0% {
         opacity: 0;
@@ -2063,7 +2083,7 @@ body:has(#admin:not(.hidden)) {
     #admin {
         display: grid;
         grid-template-columns: 340px 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
         column-gap: 24px;
         align-items: start;
 
@@ -2082,10 +2102,21 @@ body:has(#admin:not(.hidden)) {
         margin: 0 0 24px;
     }
 
-    /* Create User stays in view while scrolling through the users */
+    /* Left column: Create User with Search User under it.
+       Right column: the users, as tall as both together. */
     #admin .admin-card:first-of-type {
-        position: sticky;
-        top: 20px;
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    #admin .admin-search-card {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    #admin .admin-users-card {
+        grid-column: 2;
+        grid-row: 2 / span 2;
     }
 
     #adminUserList {

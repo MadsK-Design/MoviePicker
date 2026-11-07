@@ -8,6 +8,8 @@ const newGroupName = document.getElementById("newGroupName");
 const createUserButton = document.getElementById("createUserButton");
 const adminMessage = document.getElementById("adminMessage");
 const adminUserList = document.getElementById("adminUserList");
+const adminUserSearch = document.getElementById("adminUserSearch");
+const adminSearchInfo = document.getElementById("adminSearchInfo");
 
 const NEW_GROUP_VALUE = "__new__";
 
@@ -332,8 +334,13 @@ function renderAdminUsers() {
             `;
         }
 
+        // What the search box looks in: the username and the group's name
+        const group = adminGroups.find(group => group.id === user.groupId);
+        const searchText = `${user.username || ""} ${group?.name || user.groupId || ""}`.toLowerCase();
+
         return `
-            <div class="admin-user-card ${user.blocked ? "blocked-user" : ""}" data-uid="${user.uid}">
+            <div class="admin-user-card ${user.blocked ? "blocked-user" : ""}" data-uid="${user.uid}"
+                 data-search="${escapeHtml(searchText)}">
                 <div class="admin-user-header">
                     <div class="admin-info">
                         <span class="admin-info-label">User</span>
@@ -365,6 +372,35 @@ function renderAdminUsers() {
             </div>
         `;
     }).join("");
+
+    filterAdminUsers();
+}
+
+// Shows only the users whose name or group matches the search box
+function filterAdminUsers() {
+    const query = adminUserSearch.value.trim().toLowerCase();
+    const cards = [...adminUserList.querySelectorAll(".admin-user-card[data-uid]")];
+    let shown = 0;
+
+    cards.forEach(card => {
+        const matches = !query || card.dataset.search.includes(query);
+        card.classList.toggle("hidden", !matches);
+
+        if (matches) {
+            shown++;
+        }
+    });
+
+    // While searching, only users are shown, not the admin's own card
+    adminUserList.querySelector(".admin-self-card")?.classList.toggle("hidden", Boolean(query));
+
+    if (!query) {
+        adminSearchInfo.textContent = "";
+    } else if (shown === 0) {
+        adminSearchInfo.textContent = "No users found";
+    } else {
+        adminSearchInfo.textContent = `${shown} of ${cards.length} users`;
+    }
 }
 
 async function createGroupIfNeeded(groupName) {
@@ -509,6 +545,8 @@ newUserGroup.addEventListener("change", () => {
     newGroupName.classList.toggle("hidden", newUserGroup.value !== NEW_GROUP_VALUE);
 });
 
+adminUserSearch.addEventListener("input", filterAdminUsers);
+
 createUserButton.addEventListener("click", createUser);
 
 adminUserList.addEventListener("change", async event => {
@@ -553,6 +591,8 @@ adminLogoutButton.addEventListener("click", async () => {
 
     adminUserList.innerHTML = "";
     adminMessage.textContent = "";
+    adminUserSearch.value = "";
+    adminSearchInfo.textContent = "";
     usernameInput.value = "";
     passwordInput.value = "";
     loginError.textContent = "";
