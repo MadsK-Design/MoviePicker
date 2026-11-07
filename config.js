@@ -1,10 +1,18 @@
-const SUPABASE_URL = "https://lgexuuxomyoqjuuzrpxb.supabase.co";
+const firebaseConfig = {
+    apiKey: "AIzaSyBpdcWklQqPjC8OUf-4WshzexyfHnrdY-Y",
+    authDomain: "moviepicker-4c066.firebaseapp.com",
+    projectId: "moviepicker-4c066",
+    storageBucket: "moviepicker-4c066.firebasestorage.app",
+    messagingSenderId: "413490129843",
+    appId: "1:413490129843:web:01b073ffb5be4888a539c6"
+};
 
-const SUPABASE_KEY = "sb_publishable_cNGr4ldA1lfh78an6m6njQ_LvUExWHD";
+// Usernames are turned into fake emails like "mads@moviepicker.app"
+const EMAIL_DOMAIN = "moviepicker.app";
 
-let TABLE_NAME = "Silke-Mads";
+let GROUP_ID = "";
 
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();

@@ -957,7 +957,7 @@ movieList.addEventListener("click", async event => {
     }
 
     if (event.target.classList.contains("edit-movie-button")) {
-        const id = Number(event.target.dataset.id);
+        const id = event.target.dataset.id;
         const movie = movies.find(movie => movie.Id === id);
 
         if (!movie) {
@@ -970,7 +970,7 @@ movieList.addEventListener("click", async event => {
     }
 
     if (event.target.classList.contains("add-to-list-button")) {
-        const id = Number(event.target.dataset.id);
+        const id = event.target.dataset.id;
         const movie = movies.find(movie => movie.Id === id);
 
         if (!movie) {
@@ -1117,7 +1117,7 @@ toggleFiltersButton.addEventListener("click", () => {
     if (filterSection.classList.contains("show-filter-section")) {
         toggleFiltersButton.textContent = "Hide Filter";
     } else {
-        toggleFiltersButton.textContent = "Finde Movies";
+        toggleFiltersButton.textContent = "Find Movies";
     }
 
 });
@@ -1149,7 +1149,7 @@ movieListButtons.addEventListener("click", async event => {
     );
 
     if (deleteButton) {
-        const id = Number(deleteButton.dataset.id);
+        const id = deleteButton.dataset.id;
         const listName = deleteButton.dataset.name;
 
         const confirmed = confirm(

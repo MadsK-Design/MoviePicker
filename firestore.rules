@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return signedIn() && profile().get('admin', false) == true;
+    }
+
+    function inGroup(groupId) {
+      return signedIn()
+        && profile().get('groupId', '') == groupId
+        && profile().get('blocked', false) != true;
+    }
+
+    // Who belongs to which group. Only the admin can change it,
+    // so users can't move themselves into another group.
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    // The admin's private notes about each user
+    match /adminNotes/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    match /groups/{groupId} {
+      allow read: if isAdmin() || inGroup(groupId);
+      allow write: if isAdmin();
+
+      // movies, genres and lists
+      match /{collection}/{docId} {
+        allow read, write: if isAdmin() || inGroup(groupId);
+      }
+    }
+  }
+}

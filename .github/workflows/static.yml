@@ -31,6 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # Stamps every deploy with the commit id, so phones notice new versions
+      # (see update.js) and don't reuse old cached CSS/JS files
+      - name: Stamp version
+        run: |
+          VERSION="${GITHUB_SHA::7}"
+          sed -i "s/__VERSION__/$VERSION/g" index.html
+          echo "{\"version\": \"$VERSION\"}" > version.json
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
