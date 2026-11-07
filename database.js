@@ -137,14 +137,18 @@ async function getMovieListsFromDatabase(source = "default") {
             .orderBy("Lists", "asc")
             .get({ source });
 
-        return snapshotToRows(snapshot);
+        // Lists the user has dragged into place come first, in that order.
+        // Lists that were never moved keep alphabetical order after them.
+        return snapshotToRows(snapshot).sort((a, b) =>
+            (a.order ?? Infinity) - (b.order ?? Infinity)
+        );
     } catch (error) {
         console.error("Error loading movie lists:", error);
         return [];
     }
 }
 
-async function addMovieListToDatabase(listName, tagName) {
+async function addMovieListToDatabase(listName, description) {
     if (!GROUP_ID) {
         console.error("No group selected.");
         return false;
@@ -153,7 +157,11 @@ async function addMovieListToDatabase(listName, tagName) {
     try {
         await groupCollection("lists").add({
             Lists: listName,
-            Tag: tagName
+            Description: description,
+            // Older versions of the app show Tag on the buttons
+            Tag: listName,
+            // New lists go to the end of the row
+            order: Date.now()
         });
 
         return true;
@@ -196,6 +204,54 @@ async function removeListFromAllMovies(listName) {
         return true;
     } catch (error) {
         console.error("Error removing list from movies:", error);
+        return false;
+    }
+}
+
+// Movies remember their lists by name, so those are renamed too
+async function renameMovieListInDatabase(id, oldName, newName, description) {
+    try {
+        const snapshot = await groupCollection("movies")
+            .where("Lists", "array-contains", oldName)
+            .get();
+
+        const batch = db.batch();
+
+        batch.update(groupCollection("lists").doc(id), {
+            Lists: newName,
+            Description: description,
+            // Older versions of the app show Tag on the buttons
+            Tag: newName
+        });
+
+        snapshot.docs.forEach(doc => {
+            batch.update(doc.ref, {
+                Lists: doc.data().Lists.map(name => name === oldName ? newName : name)
+            });
+        });
+
+        await batch.commit();
+        return true;
+    } catch (error) {
+        console.error("Error renaming movie list:", error);
+        alert("Could not rename the list.");
+        return false;
+    }
+}
+
+async function saveMovieListOrderToDatabase(ids) {
+    try {
+        const batch = db.batch();
+
+        ids.forEach((id, index) => {
+            batch.update(groupCollection("lists").doc(id), { order: index });
+        });
+
+        await batch.commit();
+        return true;
+    } catch (error) {
+        console.error("Error saving list order:", error);
+        alert("Could not save the new order.");
         return false;
     }
 }

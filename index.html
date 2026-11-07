@@ -56,18 +56,6 @@
         </button>
     </div>  
 
-    <div class="action-tabs">
-
-        <button id="showPickSection"  class="active-tab" type="button">
-            Pick Movie
-        </button>
-        
-        <button id="showAddSection" type="button">
-            Add Movie
-        </button>
-
-    </div>
-
     <div id="addSection" class="action-section">
         <div class="form">
 
@@ -124,7 +112,7 @@
     </div>
 
     
-<div id="pickSection" class="action-section show-section">
+<div id="pickSection" class="action-section">
     <div class="random-picker">
 
         <div class="filters">
@@ -174,93 +162,133 @@
 </div>
 
 
-
-
-
-<div class="filter-header">
-
-    <button
-        id="toggleFiltersButton"
-        type="button"
-        class="filter-toggle-button">
-        Find Movies
-    </button>
-
-    <label class="filter-watched-toggle">
-        <input
-            type="checkbox"
-            id="showWatched">
-        <span id="showWatchedText">
-            Show Watched    
-        </span>
-        
-    </label>
-
-</div>
-
-<div id="filterSection" class="hidden-filter-section">
-
-    <div class="list-filters">
-
-        <input
-            type="text"
-            id="movieSearch"
-            placeholder="Search movies...">
-
-        <div class="dropdown">
-            <button id="listFilterGenreButton" type="button">
-                Filter Genres ▼
-            </button>
-
-            <div id="listFilterGenreContainer" class="dropdown-content"></div>
-        </div>
-
-        <div class="time-toggle-row">
-
-            <input
-                type="number"
-                id="listFilterHours"
-                placeholder="Max Hours"
-                min="0">
-
-            <input
-                type="number"
-                id="listFilterMinutes"
-                placeholder="Max Min"
-                min="0"
-                max="59">
-
-
-        </div>
-
-    </div>
-
-    </div>
+<div id="moviesSection" class="action-section show-section">
 
             <div class="movie-list-controls">
 
-        <div class="movie-list-top-row">
+        <div id="movieListScroller" class="movie-list-scroller">
+
             <button
                 id="addMovieListButton"
                 type="button"
                 aria-label="Add new movie list">
                 +
             </button>
-        </div>
 
-        <div id="movieListButtons" class="movie-list-buttons">
+            <div id="movieListButtons" class="movie-list-buttons">
+
+            </div>
 
         </div>
 
     </div>
 
-        <h2>Movies</h2>
+        <div class="movies-heading-row">
 
-        <p id="currentMovieList">
-            Showing: <em>All</em>
-        </p>
+            <h2 id="moviesHeading">All Movies</h2>
+
+            <div class="heading-tools">
+
+                <label class="watched-switch">
+                    <span>Show watched</span>
+                    <input
+                        type="checkbox"
+                        id="showWatched">
+                    <span class="switch-track" aria-hidden="true"></span>
+                </label>
+
+                <button
+                    id="toggleFiltersButton"
+                    type="button"
+                    class="search-toggle-button"
+                    aria-label="Find movies"
+                    aria-expanded="false">
+                    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="10.5" cy="10.5" r="6.5" />
+                        <line x1="15.5" y1="15.5" x2="21" y2="21" />
+                    </svg>
+                </button>
+
+            </div>
+
+        </div>
+
+        <p id="currentMovieList"></p>
+
+        <div id="filterSection" class="hidden-filter-section">
+
+            <div class="list-filters">
+
+                <input
+                    type="text"
+                    id="movieSearch"
+                    placeholder="Search movies...">
+
+                <div class="dropdown">
+                    <button id="listFilterGenreButton" type="button">
+                        Filter Genres ▼
+                    </button>
+
+                    <div id="listFilterGenreContainer" class="dropdown-content"></div>
+                </div>
+
+                <div class="time-toggle-row">
+
+                    <input
+                        type="number"
+                        id="listFilterHours"
+                        placeholder="Max Hours"
+                        min="0">
+
+                    <input
+                        type="number"
+                        id="listFilterMinutes"
+                        placeholder="Max Min"
+                        min="0"
+                        max="59">
+
+                </div>
+
+            </div>
+
+        </div>
 
         <div id="movieList"></div>
+
+</div>
+
+    <nav class="bottom-nav">
+
+        <button
+            class="bottom-nav-button"
+            type="button"
+            data-section="pickSection">
+            Pick Movie
+        </button>
+
+        <button
+            class="bottom-nav-button active-tab"
+            type="button"
+            data-section="moviesSection"
+            aria-label="Movies">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z" />
+            </svg>
+        </button>
+
+        <button
+            class="bottom-nav-button"
+            type="button"
+            data-section="addSection">
+            Add Movie
+        </button>
+
+    </nav>
+
+    <div id="listActionMenu" class="list-action-menu hidden">
+        <button id="renameListButton" type="button">Rename</button>
+        <button id="deleteListButton" type="button">Delete</button>
+    </div>
 
         <div id="editModal" class="modal hidden">
         <div class="modal-content">
@@ -301,18 +329,19 @@
 
         <div class="modal-content">
 
-            <h2>Create Movie List</h2>
+            <h2 id="movieListModalTitle">Create Movie List</h2>
 
             <input
                 type="text"
                 id="newMovieListName"
-                placeholder="List name">
-
-            <input
-                type="text"
-                id="newMovieListTag"
-                placeholder="Button tag (max 12 characters)"
+                placeholder="Name (max 12 characters)"
                 maxlength="12">
+
+            <textarea
+                id="newMovieListDescription"
+                class="list-description-input"
+                rows="3"
+                placeholder="Description (what is this list for?)"></textarea>
 
             <div class="edit-actions">
 
