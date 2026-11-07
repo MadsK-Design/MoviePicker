@@ -399,26 +399,38 @@ body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
     box-shadow: 0 0 16px rgba(196, 0, 0, .6);
 }
 
-/* ---------- Blood splat on tap (made in nicolai.js) ---------- */
+/* ---------- Realistic blood splat on tap (made in nicolai.js) ---------- */
 
 .horror-splat {
     position: fixed;
     z-index: 3000;
 
-    width: 120px;
-    height: 120px;
-    margin: -60px 0 0 -60px;
+    width: 140px;
+    height: 140px;
+    margin: -70px 0 0 -70px;
 
+    overflow: visible;
     pointer-events: none;
-    animation: horror-splat 1.8s ease-out forwards;
+    animation: horror-splat 2.7s ease-out forwards;
 }
 
+/* Hits fast, stays wet for a moment, then fades */
 @keyframes horror-splat {
-    0%   { transform: scale(.2) rotate(var(--spin)); opacity: 1; }
-    12%  { transform: scale(1.1) rotate(var(--spin)); opacity: 1; }
-    20%  { transform: scale(1) rotate(var(--spin)); opacity: 1; }
-    70%  { opacity: .85; }
-    100% { transform: scale(1.05) rotate(var(--spin)) translateY(10px); opacity: 0; }
+    0%   { transform: scale(.55); opacity: 0; }
+    4%   { transform: scale(1); opacity: 1; }
+    60%  { opacity: .95; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+/* Drops running slowly down from the splat */
+.horror-drip {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: horror-drip-run 1.8s ease-in forwards;
+}
+
+@keyframes horror-drip-run {
+    to { stroke-dashoffset: 0; }
 }
 
 /* ---------- Respect "Reduce Motion" ---------- */
@@ -431,7 +443,7 @@ body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
     }
 }
 
-/* ---------- Door intro into the haunted house (made in nicolai.js) ---------- */
+/* ---------- Door intro into the haunted hallway (made in nicolai.js) ---------- */
 
 .horror-intro {
     position: fixed;
@@ -449,19 +461,13 @@ body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
     opacity: 0;
 }
 
-/* The night outside: sky, moon and the house */
+/* Inside the haunted house: a long dark hallway */
 .horror-scene {
     position: absolute;
     inset: 0;
+    background: #050303;
 
-    display: flex;
-    align-items: flex-end;
-
-    background:
-        radial-gradient(ellipse at 75% 20%, rgba(90, 30, 40, .55), transparent 60%),
-        linear-gradient(180deg, #07040c 0%, #1a0a14 55%, #2a0d0d 100%);
-
-    transition: transform 1.5s cubic-bezier(.6, 0, .9, .5), filter 1.5s ease-in;
+    transition: transform 1.6s cubic-bezier(.55, 0, .85, .45), filter 1.6s ease-in;
 }
 
 .horror-intro.is-entering .horror-scene {
@@ -469,47 +475,68 @@ body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
     filter: brightness(0);
 }
 
-.horror-house {
+.horror-hallway {
     width: 100%;
     height: 100%;
-    max-height: 100%;
 }
 
-.horror-window {
-    animation: horror-window-flicker 2.2s infinite;
+/* Candle light that flickers and breathes */
+.horror-candle-glow {
+    animation: horror-candle 2.4s ease-in-out infinite;
 }
 
-@keyframes horror-window-flicker {
-    0%, 40%, 44%, 100% { opacity: 1; }
-    42%                { opacity: .3; }
-    70%                { opacity: .8; }
+@keyframes horror-candle {
+    0%, 100% { opacity: .9; }
+    20%      { opacity: .6; }
+    35%      { opacity: 1; }
+    52%      { opacity: .7; }
+    70%      { opacity: .95; }
 }
 
-.horror-house-door {
-    filter: drop-shadow(0 0 6px #ff7a00);
+.horror-flame {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: horror-flame .35s ease-in-out infinite alternate;
 }
 
-/* Bats flapping across the moon */
-.horror-bat {
-    animation: horror-bat-fly 5s linear infinite;
+@keyframes horror-flame {
+    from { transform: scaleY(1) skewX(-4deg); }
+    to   { transform: scaleY(1.15) skewX(4deg); }
 }
 
-.horror-bat-2 {
-    animation-duration: 6.5s;
-    animation-delay: -2s;
+.horror-portrait {
+    fill: #120a08;
+    stroke: #4a3420;
+    stroke-width: 3;
 }
 
-.horror-bat-3 {
-    animation-duration: 4.2s;
-    animation-delay: -3.3s;
+/* The demon in the doorway flickers in and out like a failing light... */
+.horror-demon {
+    opacity: 0;
+    animation: horror-demon 3.6s steps(1) 1.2s infinite;
 }
 
-@keyframes horror-bat-fly {
-    0%   { transform: translate(410px, 70px) scale(.7); }
-    25%  { transform: translate(300px, 40px) scale(.7, .4); }
-    50%  { transform: translate(200px, 80px) scale(.7); }
-    75%  { transform: translate(100px, 50px) scale(.7, .4); }
-    100% { transform: translate(-30px, 70px) scale(.7); }
+@keyframes horror-demon {
+    0%, 100% { opacity: 0; }
+    18%      { opacity: 1; }
+    22%      { opacity: 0; }
+    25%      { opacity: 1; }
+    62%      { opacity: .85; }
+    66%      { opacity: 0; }
+}
+
+/* ...but its eyes stay glowing in the dark a moment longer */
+.horror-demon-eyes {
+    opacity: 0;
+    animation: horror-demon-eyes 3.6s ease-in-out 1.2s infinite;
+}
+
+@keyframes horror-demon-eyes {
+    0%, 12%, 100% { opacity: 0; }
+    18%, 80%      { opacity: 1; }
+    83%           { opacity: .2; }
+    86%           { opacity: 1; }
+    92%           { opacity: 0; }
 }
 
 /* The heavy double doors */
