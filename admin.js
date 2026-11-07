@@ -36,8 +36,71 @@ function toGroupId(name) {
         .replace(/^-+|-+$/g, "");
 }
 
+/* //Hacker look: Matrix rain behind the admin page\\ */
+
+const matrixCanvas = document.getElementById("matrixRain");
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテト0123456789ABCDEF$#@%&";
+const MATRIX_FONT_SIZE = 14;
+
+let matrixTimer = null;
+let matrixDrops = [];
+
+function resizeMatrixRain() {
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+
+    const columns = Math.ceil(matrixCanvas.width / MATRIX_FONT_SIZE);
+    matrixDrops = Array.from({ length: columns }, () => Math.random() * -60);
+}
+
+function drawMatrixRain() {
+    const context = matrixCanvas.getContext("2d");
+
+    // A see-through black layer makes the old characters fade into trails
+    context.fillStyle = "rgba(0, 0, 0, 0.08)";
+    context.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+
+    context.fillStyle = "#00ff41";
+    context.font = `${MATRIX_FONT_SIZE}px monospace`;
+
+    matrixDrops.forEach((row, column) => {
+        const character = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
+
+        context.fillText(character, column * MATRIX_FONT_SIZE, row * MATRIX_FONT_SIZE);
+
+        // Start the column again from the top at a random moment
+        if (row * MATRIX_FONT_SIZE > matrixCanvas.height && Math.random() > 0.975) {
+            matrixDrops[column] = 0;
+        } else {
+            matrixDrops[column] = row + 1;
+        }
+    });
+}
+
+function startMatrixRain() {
+    themeColorMeta.setAttribute("content", "#000000");
+
+    if (matrixTimer || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
+
+    resizeMatrixRain();
+    window.addEventListener("resize", resizeMatrixRain);
+    matrixTimer = setInterval(drawMatrixRain, 50);
+}
+
+function stopMatrixRain() {
+    themeColorMeta.setAttribute("content", "#ffffff");
+
+    clearInterval(matrixTimer);
+    matrixTimer = null;
+    window.removeEventListener("resize", resizeMatrixRain);
+}
+
 async function showAdminPage() {
     adminSection.classList.remove("hidden");
+    startMatrixRain();
     await loadAdminData();
 }
 
@@ -102,13 +165,25 @@ function renderAdminUsers() {
         return;
     }
 
+    const normalUsers = adminUsers.filter(user => user.admin !== true);
+    const blockedCount = normalUsers.filter(user => user.blocked).length;
+
     adminUserList.innerHTML = adminUsers.map(user => {
         if (user.admin === true) {
             return `
-                <div class="admin-user-card">
+                <div class="admin-user-card admin-self-card">
                     <div class="admin-user-header">
                         <h3>${escapeHtml(user.username || "admin")}</h3>
                         <span class="admin-badge">Admin</span>
+                    </div>
+
+                    <div class="admin-stats">
+                        <p><span>Role</span> root</p>
+                        <p><span>Access</span> all groups</p>
+                        <p><span>Users</span> ${normalUsers.length}</p>
+                        <p><span>Groups</span> ${adminGroups.length}</p>
+                        <p><span>Blocked</span> ${blockedCount}</p>
+                        <p><span>Status</span> <b class="status-online">● Online</b></p>
                     </div>
                 </div>
             `;
@@ -342,6 +417,7 @@ adminUserList.addEventListener("click", async event => {
 });
 
 adminLogoutButton.addEventListener("click", async () => {
+    stopMatrixRain();
     await auth.signOut();
 
     adminUserList.innerHTML = "";
