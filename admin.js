@@ -232,9 +232,9 @@ function startHackIntro() {
             hackIntroGranted.classList.remove("hidden");
             await sleep(650);
 
-            hackIntro.classList.add("fade-out");
-            await sleep(450);
+            // The page then switches on like an old CRT screen
             hackIntro.classList.add("hidden");
+            await playPowerOn();
         }
     };
 }
@@ -242,11 +242,16 @@ function startHackIntro() {
 async function showAdminPage() {
     adminSection.classList.remove("hidden");
     startMatrixRain();
+    startSystemLog();
+    startUptime();
 
     const intro = startHackIntro();
 
     await loadAdminData();
     await intro.finish();
+
+    // The cards were drawn behind the intro; decrypt them now that they show
+    decryptUserCards();
 }
 
 async function loadAdminData() {
@@ -271,7 +276,7 @@ async function loadAdminData() {
         });
     } catch (error) {
         console.error("Error loading admin data:", error);
-        adminMessage.textContent = "Could not load users. Are the Firestore rules published?";
+        typeAdminMessage("Could not load users. Are the Firestore rules published?", true);
         return;
     }
 
@@ -373,18 +378,24 @@ function renderAdminUsers() {
         `;
     }).join("");
 
-    filterAdminUsers();
+    filterAdminUsers(false);
+    decryptUserCards();
 }
 
-// Shows only the users whose name or group matches the search box
-function filterAdminUsers() {
+// Shows only the users whose name or group matches the search box.
+// While typing, a scan line sweeps over the list and matches light up.
+function filterAdminUsers(fromTyping = true) {
     const query = adminUserSearch.value.trim().toLowerCase();
     const cards = [...adminUserList.querySelectorAll(".admin-user-card[data-uid]")];
     let shown = 0;
 
+    if (fromTyping) {
+        playSearchScan();
+    }
+
     cards.forEach(card => {
         const matches = !query || card.dataset.search.includes(query);
-        card.classList.toggle("hidden", !matches);
+        showCardInSearch(card, matches, fromTyping && Boolean(query));
 
         if (matches) {
             shown++;
@@ -392,7 +403,11 @@ function filterAdminUsers() {
     });
 
     // While searching, only users are shown, not the admin's own card
-    adminUserList.querySelector(".admin-self-card")?.classList.toggle("hidden", Boolean(query));
+    const selfCard = adminUserList.querySelector(".admin-self-card");
+
+    if (selfCard) {
+        showCardInSearch(selfCard, !query, false);
+    }
 
     if (!query) {
         adminSearchInfo.textContent = "";
@@ -425,29 +440,37 @@ async function createUser() {
     const password = newUserPassword.value;
     let groupId = newUserGroup.value;
 
-    adminMessage.textContent = "";
+    clearAdminMessage();
 
     if (!/^[a-z0-9._-]+$/.test(username)) {
-        adminMessage.textContent = "Username can only use a-z, 0-9, dot, dash and underscore.";
+        typeAdminMessage("Username can only use a-z, 0-9, dot, dash and underscore.", true);
         return;
     }
 
     if (password === "") {
-        adminMessage.textContent = "Please enter a password.";
+        typeAdminMessage("Please enter a password.", true);
         return;
     }
 
     if (!groupId) {
-        adminMessage.textContent = "Please choose a group.";
+        typeAdminMessage("Please choose a group.", true);
         return;
     }
 
     if (groupId === NEW_GROUP_VALUE && newGroupName.value.trim() === "") {
-        adminMessage.textContent = "Please enter a name for the new group.";
+        typeAdminMessage("Please enter a name for the new group.", true);
         return;
     }
 
     createUserButton.disabled = true;
+
+    // The creation runs as a little "process" log, one step at a time
+    const groupLabel = groupId === NEW_GROUP_VALUE
+        ? toGroupId(newGroupName.value)
+        : groupId;
+
+    startProcessLog();
+    const credentialStep = await logStep("Generating credentials...");
 
     let uid;
 
@@ -459,16 +482,20 @@ async function createUser() {
 
         uid = credential.user.uid;
         await userCreatorAuth.signOut();
+        logResult(credentialStep, true);
     } catch (error) {
         console.error("Error creating login:", error);
+        logResult(credentialStep, false);
 
-        adminMessage.textContent = error.code === "auth/email-already-in-use"
+        await logStep(error.code === "auth/email-already-in-use"
             ? `The username "${username}" is already taken.`
-            : "Could not create the login.";
+            : "Could not create the login.", "process-error");
 
         createUserButton.disabled = false;
         return;
     }
+
+    const groupStep = await logStep(`Injecting into group ${groupLabel}...`);
 
     try {
         if (groupId === NEW_GROUP_VALUE) {
@@ -486,11 +513,17 @@ async function createUser() {
         await db.collection("adminNotes").doc(uid).set({
             notes: password
         });
+        logResult(groupStep, true);
     } catch (error) {
         console.error("Error linking user to group:", error);
-        adminMessage.textContent =
+        logResult(groupStep, false);
+
+        await logStep(
             `The login "${username}" was created, but could not be linked to a group. ` +
-            "Delete it in the Firebase console and try again.";
+            "Delete it in the Firebase console and try again.",
+            "process-error"
+        );
+
         createUserButton.disabled = false;
         return;
     }
@@ -500,7 +533,7 @@ async function createUser() {
     newGroupName.value = "";
     createUserButton.disabled = false;
 
-    adminMessage.textContent = `Created "${username}".`;
+    await logStep(`ACCESS GRANTED: ${username}`, "process-granted");
 
     await loadAdminData();
 }
@@ -529,15 +562,21 @@ async function removeUser(uid) {
         return;
     }
 
+    // The card melts away while the user is being removed
+    const card = adminUserList.querySelector(`.admin-user-card[data-uid="${uid}"]`);
+    const wipe = card ? playWipe(card) : Promise.resolve();
+
     try {
         await db.collection("users").doc(uid).delete();
         await db.collection("adminNotes").doc(uid).delete();
     } catch (error) {
         console.error("Error removing user:", error);
         alert("Could not remove the user.");
+        await loadAdminData();
         return;
     }
 
+    await wipe;
     await loadAdminData();
 }
 
@@ -545,7 +584,7 @@ newUserGroup.addEventListener("change", () => {
     newGroupName.classList.toggle("hidden", newUserGroup.value !== NEW_GROUP_VALUE);
 });
 
-adminUserSearch.addEventListener("input", filterAdminUsers);
+adminUserSearch.addEventListener("input", () => filterAdminUsers(true));
 
 createUserButton.addEventListener("click", createUser);
 
@@ -554,9 +593,14 @@ adminUserList.addEventListener("change", async event => {
         return;
     }
 
-    const uid = event.target.closest(".admin-user-card").dataset.uid;
+    const card = event.target.closest(".admin-user-card");
+    const uid = card.dataset.uid;
+
+    // A progress bar runs across the card while the user moves group
+    const transfer = playTransfer(card);
 
     if (await updateUser(uid, { groupId: event.target.value })) {
+        await transfer;
         await loadAdminData();
     }
 });
@@ -573,7 +617,11 @@ adminUserList.addEventListener("click", async event => {
     if (event.target.classList.contains("admin-block-button")) {
         const user = adminUsers.find(user => user.uid === uid);
 
+        // A LOCKED / UNLOCKED stamp slams onto the card first
+        const lockdown = playLockdown(card, !user.blocked);
+
         if (await updateUser(uid, { blocked: !user.blocked })) {
+            await lockdown;
             await loadAdminData();
         }
 
@@ -587,10 +635,12 @@ adminUserList.addEventListener("click", async event => {
 
 adminLogoutButton.addEventListener("click", async () => {
     stopMatrixRain();
+    stopSystemLog();
+    stopUptime();
     await auth.signOut();
 
     adminUserList.innerHTML = "";
-    adminMessage.textContent = "";
+    clearAdminMessage();
     adminUserSearch.value = "";
     adminSearchInfo.textContent = "";
     usernameInput.value = "";

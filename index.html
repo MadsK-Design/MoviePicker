@@ -444,6 +444,8 @@
     <div class="top-bar">
         <h1>Admin</h1>
 
+        <span id="adminUptime" class="admin-uptime"></span>
+
         <button id="adminLogoutButton" type="button">
             Logout
         </button>
@@ -495,6 +497,14 @@
 
     </section>
 
+    <section class="admin-card admin-log-card">
+
+        <h2>System Log</h2>
+
+        <pre id="adminSystemLog" class="admin-system-log" aria-hidden="true"></pre>
+
+    </section>
+
     <section class="admin-card admin-users-card">
 
         <h2>Users</h2>
@@ -515,6 +525,7 @@
     <script src="database.js?v=__VERSION__"></script>
     <script src="script.js?v=__VERSION__"></script>
     <script src="admin.js?v=__VERSION__"></script>
+    <script src="admin-effects.js?v=__VERSION__"></script>
     <script src="theme.js?v=__VERSION__"></script>
     <script src="login.js?v=__VERSION__"></script>
 
