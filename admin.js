@@ -340,8 +340,9 @@ function renderAdminUsers() {
                 </div>
 
                 <!-- Read-only: passwords can't be changed from here -->
-                <div class="admin-stats">
-                    <p><span>Password</span> ${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</p>
+                <div class="admin-password">
+                    <span class="admin-password-label">Password</span>
+                    <span class="admin-password-value">${escapeHtml(passwordFromNote(adminNotes[user.uid])) || "–"}</span>
                 </div>
 
                 <!-- The only thing you change on a card; saves as soon as you pick a group -->
