@@ -55,6 +55,21 @@ function renderLive() {
     // While a command is running, the prompt line waits (like a real terminal)
     consoleLive.classList.toggle("hidden", consoleState.busy);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    keepInputOnLiveLine();
+}
+
+// iPhones scroll the page so the focused input is above the keyboard on
+// every key press. The input is invisible, so put it exactly where the
+// typing line is; then the page scrolls to the line you are typing on.
+function keepInputOnLiveLine() {
+    const card = consoleInput.offsetParent;
+
+    if (!card || consoleState.busy) {
+        return;
+    }
+
+    const top = consoleLive.getBoundingClientRect().top - card.getBoundingClientRect().top;
+    consoleInput.style.top = `${Math.max(0, Math.round(top))}px`;
 }
 
 async function consoleType(text, className = "", speed = 12) {

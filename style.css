@@ -2777,11 +2777,12 @@ body:has(#admin:not(.hidden)) .status-bar-backdrop {
 
 /* ---------- Console: typing straight into the terminal ---------- */
 
-/* The real input is invisible; it only receives the keys */
+/* The real input is invisible; it only receives the keys. admin-console.js
+   keeps it on the line you type on, so iPhones scroll to that line. */
 #admin .console-input {
     position: absolute;
     left: 0;
-    bottom: 0;
+    top: 0;
     width: 1px;
     height: 1px;
     margin: 0;
