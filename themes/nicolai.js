@@ -139,8 +139,6 @@
     }
 
     function onTap(event) {
-        unlockAudio();
-
         // While a jumpscare is on screen, taps don't splat or count
         if (scareElement) {
             return;
@@ -329,30 +327,10 @@
 
     /* ---------- Generated sounds (no files needed) ---------- */
 
+    // The sound engine is shared with the rest of the theme (theme.js)
+    // and switched on by his taps. Phone speakers can't play very deep
+    // notes, so everything here stays above roughly 100 Hz.
     let audio = null;
-
-    // Phones only allow sound after a tap, so the sound engine is
-    // switched on by the first tap
-    function unlockAudio() {
-        if (!audio) {
-            const AudioEngine = window.AudioContext || window.webkitAudioContext;
-
-            if (!AudioEngine) {
-                return;
-            }
-
-            audio = new AudioEngine();
-
-            // On iPhone: play even when the silent switch is on
-            if (navigator.audioSession) {
-                navigator.audioSession.type = "playback";
-            }
-        }
-
-        if (audio.state === "suspended") {
-            audio.resume();
-        }
-    }
 
     function noiseBuffer(seconds) {
         const buffer = audio.createBuffer(1, audio.sampleRate * seconds, audio.sampleRate);
@@ -365,21 +343,22 @@
         return buffer;
     }
 
-    // A volume curve: quick fade in, hold, fade out
+    // A volume curve: fade in, hold, fade out
     function envelope(gain, start, attack, hold, release, peak) {
         gain.gain.setValueAtTime(0.0001, start);
         gain.gain.exponentialRampToValueAtTime(peak, start + attack);
-        gain.gain.setValueAtTime(peak, start + attack + hold);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + attack + hold + release);
+        gain.gain.setValueAtTime(peak, start + attack + Math.max(hold, 0));
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + attack + Math.max(hold, 0) + release);
     }
 
-    function playNoise(start, length, filterType, frequency, peak, attack = .3) {
+    function playNoise(start, length, filterType, frequency, peak, attack = .3, quality = 1) {
         const source = audio.createBufferSource();
         source.buffer = noiseBuffer(length + .5);
 
         const filter = audio.createBiquadFilter();
         filter.type = filterType;
         filter.frequency.value = frequency;
+        filter.Q.value = quality;
 
         const gain = audio.createGain();
         envelope(gain, start, attack, length - attack - .4, .4, peak);
@@ -387,36 +366,76 @@
         source.connect(filter).connect(gain).connect(audio.destination);
         source.start(start);
         source.stop(start + length + .5);
+
+        return gain;
     }
 
-    function playTone(start, length, type, from, to, peak) {
+    function playTone(start, length, type, from, to, peak, attack = .05) {
         const oscillator = audio.createOscillator();
         oscillator.type = type;
         oscillator.frequency.setValueAtTime(from, start);
         oscillator.frequency.exponentialRampToValueAtTime(to, start + length);
 
         const gain = audio.createGain();
-        envelope(gain, start, .05, length - .35, .3, peak);
+        envelope(gain, start, attack, length - attack - .3, .3, peak);
 
         oscillator.connect(gain).connect(audio.destination);
         oscillator.start(start);
         oscillator.stop(start + length + .1);
+
+        return oscillator;
     }
 
+    // A slow wobble in pitch, like a voice or an old tape
+    function addVibrato(oscillator, start, length, speed, depth) {
+        const wobble = audio.createOscillator();
+        wobble.frequency.value = speed;
+
+        const wobbleDepth = audio.createGain();
+        wobbleDepth.gain.value = depth;
+
+        wobble.connect(wobbleDepth).connect(oscillator.frequency);
+        wobble.start(start);
+        wobble.stop(start + length + .1);
+    }
+
+    // A bell-like "dong" that rings out
+    function playBell(start, frequency, peak) {
+        [1, 2.4, 3.9].forEach((ratio, i) => {
+            const oscillator = audio.createOscillator();
+            oscillator.type = "sine";
+            oscillator.frequency.value = frequency * ratio;
+
+            const gain = audio.createGain();
+            envelope(gain, start, .005, 0, 2.6 - i * .6, peak / (i + 1));
+
+            oscillator.connect(gain).connect(audio.destination);
+            oscillator.start(start);
+            oscillator.stop(start + 3);
+        });
+    }
+
+    // Each beat is a soft thump plus a short click, so a small speaker
+    // can still hear it
     function playHeartbeat(start, beats, peak) {
         for (let i = 0; i < beats; i++) {
             [0, .28].forEach(offset => {
                 const time = start + i * .85 + offset;
+                const level = offset ? peak * .7 : peak;
+
                 const oscillator = audio.createOscillator();
-                oscillator.frequency.setValueAtTime(70, time);
-                oscillator.frequency.exponentialRampToValueAtTime(40, time + .18);
+                oscillator.type = "triangle";
+                oscillator.frequency.setValueAtTime(150, time);
+                oscillator.frequency.exponentialRampToValueAtTime(80, time + .15);
 
                 const gain = audio.createGain();
-                envelope(gain, time, .01, .05, .2, offset ? peak * .7 : peak);
+                envelope(gain, time, .008, .04, .18, level);
 
                 oscillator.connect(gain).connect(audio.destination);
                 oscillator.start(time);
-                oscillator.stop(time + .35);
+                oscillator.stop(time + .3);
+
+                playNoise(time, .45, "lowpass", 900, level * .5, .005);
             });
         }
     }
@@ -466,26 +485,34 @@
     }
 
     function playScareSound(name) {
-        if (!audio || audio.state !== "running") {
+        audio = getThemeAudio();
+
+        if (!audio) {
             return;
         }
 
         const now = audio.currentTime + .02;
 
         if (name === "whisper") {
-            playNoise(now, 3.8, "bandpass", 1100, .12, 1.2);
-            playTone(now, 4, "sine", 55, 48, .25);
+            // Step 1: an eerie ringing tone, a ghostly whisper and a bell
+            const high = playTone(now, 4.2, "sine", 660, 640, .09, 1);
+            const beating = playTone(now, 4.2, "sine", 664, 643, .09, 1);
+            addVibrato(high, now, 4.2, 5, 6);
+            addVibrato(beating, now, 4.2, 4, 5);
+            playNoise(now + .3, 3.4, "bandpass", 2600, .35, 1, 2.5);
+            playBell(now + .2, 330, .35);
         } else if (name === "heartbeat") {
-            playHeartbeat(now, 5, .9);
-            playTone(now, 4.2, "sine", 50, 44, .3);
-            playNoise(now + 1, 3, "bandpass", 900, .1, 1);
+            playHeartbeat(now, 5, .8);
+            playTone(now, 4.4, "sawtooth", 110, 104, .05, .8);
+            playNoise(now + 1, 3, "bandpass", 1500, .2, 1, 2);
         } else if (name === "drone") {
-            playTone(now, 5, "sawtooth", 60, 240, .08);
-            playTone(now, 5, "sine", 120, 480, .12);
+            const rising = playTone(now, 5, "sawtooth", 110, 330, .07, .8);
+            addVibrato(rising, now, 5, 6, 4);
+            playTone(now, 5, "sine", 220, 660, .12, .8);
             playHeartbeat(now + 2, 3, .8);
         } else if (name === "scream") {
-            playScream(now, 1.9, .55);
-            playTone(now, 2.4, "sine", 45, 30, .5);
+            playScream(now, 1.9, .65);
+            playTone(now, 2.2, "sawtooth", 140, 90, .14, .02);
         }
     }
 
@@ -655,6 +682,146 @@
         `;
     }
 
+    /* ---------- Sounds for the door intro ---------- */
+
+    // Generated in the app (no files). They follow the intro's timeline:
+    // wind and a drone, thuds while the doors rattle, creaking hinges as
+    // they open, footsteps down the hallway, and a boom when it goes black.
+    // Only plays if a tap has switched the sound engine on (the Login tap).
+    let introOutput = null;
+
+    function introSounds() {
+        const sound = getThemeAudio();
+
+        if (!sound) {
+            return;
+        }
+
+        introOutput = sound.createGain();
+        introOutput.connect(sound.destination);
+
+        const output = introOutput;
+        const t = sound.currentTime + .05;
+
+        const noise = seconds => {
+            const buffer = sound.createBuffer(1, sound.sampleRate * seconds, sound.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < data.length; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            return buffer;
+        };
+
+        const fade = (gain, start, attack, hold, release, peak) => {
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(peak, start + attack);
+            gain.gain.setValueAtTime(peak, start + attack + hold);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + attack + hold + release);
+        };
+
+        function noiseSound(start, length, type, frequency, peak, attack = .01, quality = 1) {
+            const source = sound.createBufferSource();
+            source.buffer = noise(length + .3);
+
+            const filter = sound.createBiquadFilter();
+            filter.type = type;
+            filter.frequency.value = frequency;
+            filter.Q.value = quality;
+
+            const gain = sound.createGain();
+            fade(gain, start, attack, Math.max(length - attack - .2, 0), .2, peak);
+
+            source.connect(filter).connect(gain).connect(output);
+            source.start(start);
+            source.stop(start + length + .3);
+
+            return filter;
+        }
+
+        function tone(start, length, type, from, to, peak, attack = .05) {
+            const oscillator = sound.createOscillator();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(from, start);
+            oscillator.frequency.exponentialRampToValueAtTime(to, start + length);
+
+            const gain = sound.createGain();
+            fade(gain, start, attack, Math.max(length - attack - .3, 0), .3, peak);
+
+            oscillator.connect(gain).connect(output);
+            oscillator.start(start);
+            oscillator.stop(start + length + .1);
+        }
+
+        // Howling wind: noise through a filter that slowly sweeps up and down
+        function wind(start, length) {
+            const filter = noiseSound(start, length, "bandpass", 500, .28, 1.2, 4);
+            filter.frequency.setValueAtTime(450, start);
+            filter.frequency.linearRampToValueAtTime(950, start + length * .4);
+            filter.frequency.linearRampToValueAtTime(600, start + length * .7);
+            filter.frequency.linearRampToValueAtTime(1100, start + length);
+        }
+
+        // A creaking hinge: a buzzing tone that stutters in pitch and volume
+        function creak(start, length, pitch, peak) {
+            const oscillator = sound.createOscillator();
+            oscillator.type = "sawtooth";
+
+            const filter = sound.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.frequency.value = 1300;
+            filter.Q.value = 5;
+
+            const gain = sound.createGain();
+            gain.gain.setValueAtTime(0.0001, start);
+
+            for (let time = 0; time < length; time += .03) {
+                const progress = time / length;
+                oscillator.frequency.setValueAtTime(pitch * (.8 + Math.random() * .45) * (1 + progress * .5), start + time);
+                gain.gain.setValueAtTime(peak * (.25 + Math.random() * .75) * Math.sin(Math.PI * Math.min(progress * 1.4, 1)), start + time);
+            }
+
+            gain.gain.setValueAtTime(0.0001, start + length);
+
+            oscillator.connect(filter).connect(gain).connect(output);
+            oscillator.start(start);
+            oscillator.stop(start + length + .05);
+        }
+
+        // A heavy thud on wood: a low knock plus a short burst of noise
+        function thud(start, peak) {
+            tone(start, .25, "triangle", 160, 70, peak, .005);
+            noiseSound(start, .2, "lowpass", 700, peak * .6);
+        }
+
+        // From the start: wind and a low drone
+        wind(t, 5.3);
+        tone(t, 4.6, "sawtooth", 110, 98, .035, 1.2);
+
+        // The doors rattle (0.35–1.05 s)
+        for (let i = 0; i < 6; i++) {
+            thud(t + .35 + i * .12, i % 2 ? .45 : .6);
+        }
+
+        // The doors swing open (from 1.1 s), one hinge each
+        creak(t + 1.1, 1.5, 150, .5);
+        creak(t + 1.28, 1.35, 110, .4);
+
+        // Walking down the hallway (from 2.95 s), with a whisper rising
+        for (let i = 0; i < 4; i++) {
+            const step = t + 2.95 + i * .38;
+            thud(step, .3 + i * .08);
+            noiseSound(step + .04, .12, "bandpass", 1900, .06, .01, 3);
+        }
+
+        noiseSound(t + 3, 1.3, "bandpass", 2600, .25, .9, 2.5);
+
+        // Everything goes black (around 4.35 s)
+        tone(t + 4.35, 1.6, "triangle", 140, 55, .7, .01);
+        noiseSound(t + 4.35, 1.2, "lowpass", 500, .5, .01);
+    }
+
     let introElement = null;
 
     async function intro() {
@@ -672,6 +839,7 @@
         `;
 
         document.body.appendChild(introElement);
+        introSounds();
 
         const element = introElement;
 
@@ -714,6 +882,9 @@
 
             introElement?.remove();
             introElement = null;
+
+            introOutput?.disconnect();
+            introOutput = null;
 
             scareElement?.remove();
             scareElement = null;

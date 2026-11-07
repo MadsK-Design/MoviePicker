@@ -8,8 +8,10 @@ When you're done, just ask Claude: **"remove the jumpscares"**.
 1. **`themes/nicolai.js`**
    - Everything between `JUMPSCARES START` and `JUMPSCARES END`
      (the pictures, escalation, blood text and the generated sounds).
-   - In `onTap()`: the lines `unlockAudio();`, the `if (scareElement) { return; }`
-     block and `maybeScare(event);`. Keep `makeSplat(...)`.
+   - In `onTap()`: the `if (scareElement) { return; }` block and
+     `maybeScare(event);`. Keep `makeSplat(...)`.
+   - Keep the door intro sounds (`introSounds`) and the shared sound engine
+     in `theme.js`; they aren't part of the jumpscares.
    - In `start()`: `startedAt = Date.now();`, `recentTaps = [];` and `preloadScares();`.
    - In `stop()`: `scareElement?.remove();` and `scareElement = null;`.
 
