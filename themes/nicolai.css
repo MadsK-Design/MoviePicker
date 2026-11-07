@@ -405,9 +405,9 @@ body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
     position: fixed;
     z-index: 3000;
 
-    width: 140px;
-    height: 140px;
-    margin: -70px 0 0 -70px;
+    width: 80px;
+    height: 80px;
+    margin: -40px 0 0 -40px;
 
     overflow: visible;
     pointer-events: none;
