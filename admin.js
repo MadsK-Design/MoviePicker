@@ -15,6 +15,11 @@ let adminUsers = [];
 let adminGroups = [];
 let adminNotes = {};
 
+// Older cards were saved as "Password: 2507"; show just the password
+function passwordFromNote(note) {
+    return (note || "").replace(/^Password:\s*/i, "");
+}
+
 // A second Firebase app is used to create users, because creating a user
 // signs that user in, and we don't want to log the admin out
 const userCreatorApp = firebase.initializeApp(firebaseConfig, "userCreator");
@@ -342,8 +347,9 @@ function renderAdminUsers() {
                 </label>
 
                 <label class="admin-field">
-                    Notes
-                    <textarea class="admin-notes" rows="2">${escapeHtml(adminNotes[user.uid] || "")}</textarea>
+                    Password
+                    <input type="text" class="admin-notes" autocomplete="off"
+                           value="${escapeHtml(passwordFromNote(adminNotes[user.uid]))}">
                 </label>
 
                 <div class="admin-user-actions">
@@ -437,9 +443,9 @@ async function createUser() {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Every new user gets a note with their password
+        // Every new user gets their password saved on their card
         await db.collection("adminNotes").doc(uid).set({
-            notes: `Password: ${password}`
+            notes: password
         });
     } catch (error) {
         console.error("Error linking user to group:", error);

@@ -1584,6 +1584,7 @@ button {
 }
 
 .admin-field select,
+.admin-field input,
 .admin-field textarea {
     margin: 4px 0 0;
     font-family: inherit;
