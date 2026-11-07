@@ -16,3 +16,9 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Keep a copy of the data on the device, so the app opens instantly
+// and still shows movies with bad reception
+db.enablePersistence({ synchronizeTabs: true }).catch(error => {
+    console.warn("Offline cache not available:", error.code);
+});

@@ -113,8 +113,8 @@ function getSelectedGenres() {
         .map(box => box.value);
 }
 
-async function loadMovies() {
-    movies = await getMoviesFromDatabase();
+async function loadMovies(source = "default") {
+    movies = await getMoviesFromDatabase(source);
     renderMovies();
 }
 
@@ -549,8 +549,8 @@ async function saveEditedMovie() {
     }
 }
 
-async function loadAllGenres() {
-    customGenres = await getCustomGenresFromDatabase();
+async function loadAllGenres(source = "default") {
+    customGenres = await getCustomGenresFromDatabase(source);
 
     const customGenreNames = customGenres.map(item => item.Genre);
 
@@ -635,8 +635,8 @@ async function saveNewGenre() {
     }
 }
 
-async function loadMovieLists() {
-    movieLists = await getMovieListsFromDatabase();
+async function loadMovieLists(source = "default") {
+    movieLists = await getMovieListsFromDatabase(source);
 
     const selectedStillExists =
         selectedMovieList === "All" ||
