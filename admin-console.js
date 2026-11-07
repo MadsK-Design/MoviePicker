@@ -55,6 +55,21 @@ function renderLive() {
     // While a command is running, the prompt line waits (like a real terminal)
     consoleLive.classList.toggle("hidden", consoleState.busy);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    keepInputOnLiveLine();
+}
+
+// iPhones scroll the page so the focused input is above the keyboard on
+// every key press. The input is invisible, so put it exactly where the
+// typing line is; then the page scrolls to the line you are typing on.
+function keepInputOnLiveLine() {
+    const card = consoleInput.offsetParent;
+
+    if (!card || consoleState.busy) {
+        return;
+    }
+
+    const top = consoleLive.getBoundingClientRect().top - card.getBoundingClientRect().top;
+    consoleInput.style.top = `${Math.max(0, Math.round(top))}px`;
 }
 
 async function consoleType(text, className = "", speed = 12) {
@@ -495,12 +510,17 @@ function deleteUserFlow() {
         }
 
         consoleState.busy = true;
+        let wipe = Promise.resolve();
 
         try {
             // The login goes first, while the saved password is still there
             const loginLine = await consoleType(`revoke login ${user.username} ... `, "console-dim");
             const loginDeleted = await deleteLogin(user.username, passwordFromNote(adminNotes[user.uid]));
             loginLine.textContent += loginDeleted ? "OK" : "FAILED";
+
+            // The user's card melts away, like with the Remove button
+            const card = adminUserList.querySelector(`.admin-user-card[data-uid="${user.uid}"]`);
+            wipe = card ? playWipe(card) : Promise.resolve();
 
             await consoleType(`rm users/${user.uid} ... `, "console-dim");
             await db.collection("users").doc(user.uid).delete();
@@ -523,6 +543,8 @@ function deleteUserFlow() {
             consolePrint("FAILED: the user could not be deleted.", "console-error");
         }
 
+        // Let the melt finish before the cards are redrawn
+        await wipe;
         consoleState.busy = false;
         await loadAdminData();
         enterMode("users");
