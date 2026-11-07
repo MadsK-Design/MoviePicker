@@ -12,10 +12,12 @@ const EMAIL_DOMAIN = "moviepicker.app";
 
 let GROUP_ID = "";
 
-// "?admin" in the address is the second app (the "MP Admin" icon). It runs
-// as its own Firebase app, so it keeps its own login: you can be logged in to
-// your list in the normal app and as admin in this one at the same time.
-const IS_SECOND_APP = new URLSearchParams(location.search).has("admin");
+// The second app (the "MP Admin" icon) is the page at /admin/ (or the old
+// "?admin" address). It runs as its own Firebase app, so it keeps its own
+// login: you can be logged in to your list in the normal app and as admin in
+// this one at the same time.
+const IS_SECOND_APP = Boolean(document.querySelector('meta[name="app-variant"][content="admin"]')) ||
+    new URLSearchParams(location.search).has("admin");
 
 const mainApp = IS_SECOND_APP
     ? firebase.initializeApp(firebaseConfig, "secondApp")
