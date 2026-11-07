@@ -2085,6 +2085,8 @@ body:has(#admin:not(.hidden)) {
         grid-template-columns: 340px 1fr;
         grid-template-rows: auto auto auto 1fr auto;
         column-gap: 24px;
+        /* No full-screen height here, or the empty row above the console stretches */
+        min-height: 0;
         align-items: start;
 
         max-width: 1200px;
