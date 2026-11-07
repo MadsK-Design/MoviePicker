@@ -11,8 +11,9 @@ const consoleLive = document.getElementById("consoleLive");
 const consoleTyped = document.getElementById("consoleTyped");
 
 const consoleState = {
-    mode: "root",          // "root" | "lists" | "users" | "group" | "edit"
+    mode: "root",          // "root" | "lists" | "users" | "user" | "group" | "edit"
     group: null,           // { id, name }
+    user: null,            // the user that is open
     movies: [],
     categories: [],
     customGenres: [],
@@ -82,6 +83,7 @@ function setPrompt() {
         root: "~",
         lists: "~/lists",
         users: "~/users",
+        user: `~/users/${consoleState.user?.username}`,
         group: `~/lists/${consoleState.group?.id}`,
         edit: `~/lists/${consoleState.group?.id}/edit`
     };
@@ -91,10 +93,40 @@ function setPrompt() {
     renderLive();
 }
 
-function ask(question, handler, className = "console-warn") {
+// suggest (optional): (typed text) => [{ label, value }] shown while answering
+function ask(question, handler, className = "console-warn", suggest = null) {
     consolePrint(question, className);
     consoleState.ask = handler;
+    consoleState.askSuggest = suggest;
     setPrompt();
+}
+
+// Suggestions for the question being answered; picking one answers it
+function askSuggestions(text = consoleInput.value) {
+    if (!consoleState.askSuggest || !text.trim()) {
+        return [];
+    }
+
+    return consoleState.askSuggest(text).map(item => ({
+        label: item.label,
+        value: item.value,
+        pick: () => answerWith(item.value)
+    }));
+}
+
+async function answerWith(value) {
+    if (consoleState.busy) return;
+
+    consoleState.busy = true;
+    renderLive();
+
+    try {
+        await runConsole(value);
+    } finally {
+        consoleState.busy = false;
+        renderSuggestions();
+        renderLive();
+    }
 }
 
 /* ---------- Small helpers ---------- */
@@ -215,10 +247,17 @@ const HELP = {
     ],
     users: [
         "Type a username to find a user.",
-        "  ↑ ↓ + Enter, or click   show the user",
+        "  ↑ ↓ + Enter, or click   open the user",
         "  create                  make a new user",
         "  back                    choose list or user again",
         "  clear                   clear the screen"
+    ],
+    user: [
+        "  info            show the user again",
+        "  block           block the user",
+        "  unblock         unblock the user",
+        "  delete  (d)     delete the user",
+        "  back            pick another user"
     ],
     group: [
         "  edit    (e)     see and change the movies",
@@ -308,6 +347,11 @@ function currentSuggestions(text = consoleInput.value) {
         }));
     }
 
+    // Lists and users only show up once something is typed
+    if (!typed && ["lists", "users"].includes(consoleState.mode)) {
+        return [];
+    }
+
     if (consoleState.mode === "lists") {
         return matchingGroups(text).map(group => {
             const users = adminUsers.filter(user => user.groupId === group.id).length;
@@ -318,7 +362,7 @@ function currentSuggestions(text = consoleInput.value) {
     if (consoleState.mode === "users") {
         return matchingUsers(text).map(user => {
             const group = adminGroups.find(group => group.id === user.groupId);
-            return { label: `${user.username}   ${group?.name || user.groupId || "no list"}`, pick: () => showUser(user) };
+            return { label: `${user.username}   ${group?.name || user.groupId || "no list"}`, pick: () => openUser(user) };
         });
     }
 
@@ -327,7 +371,11 @@ function currentSuggestions(text = consoleInput.value) {
 
 function renderSuggestions() {
     const typed = consoleInput.value.trim().toLowerCase();
-    const suggestions = consoleState.ask || consoleState.busy ? [] : currentSuggestions();
+    const suggestions = consoleState.busy
+        ? []
+        : consoleState.ask
+            ? askSuggestions()
+            : currentSuggestions();
     const searching = ["root", "lists", "users"].includes(consoleState.mode) &&
         !consoleState.ask && !consoleState.busy && typed && !COMMAND_WORDS.includes(typed);
 
@@ -362,6 +410,7 @@ function renderSuggestions() {
 async function enterMode(mode, announce = false) {
     consoleState.mode = mode;
     consoleState.group = null;
+    consoleState.user = null;
     consoleState.ask = null;
     consoleState.highlighted = 0;
 
@@ -380,21 +429,97 @@ async function enterMode(mode, announce = false) {
     }
 }
 
-function showUser(user) {
+function printUser(user) {
     const group = adminGroups.find(group => group.id === user.groupId);
 
-    consolePrint(`> ${user.username}`, "console-echo");
     consolePrint(`User      ${user.username}`, "console-heading");
     consolePrint(`Password  ${passwordFromNote(adminNotes[user.uid]) || "–"}`);
     consolePrint(`List      ${group?.name || user.groupId || "no list"}`);
     consolePrint(`Status    ${user.blocked ? "blocked" : "active"}`, user.blocked ? "console-error" : "");
+}
+
+// Opens a user: shows their info, then waits for block / unblock / delete
+async function openUser(user) {
+    consoleState.mode = "user";
+    consoleState.user = user;
+    consoleState.highlighted = 0;
     renderSuggestions();
+
+    consolePrint(`> open ${user.username}`, "console-echo");
+    await consoleType(`Accessing ${user.username}...`, "console-dim");
+    printUser(user);
+    consolePrint(`Block, unblock or delete?  (or "help")`, "console-dim");
+    setPrompt();
+    consoleInput.focus({ preventScroll: true });
+}
+
+// Picks up the latest version of the open user after a change
+function refreshOpenUser() {
+    consoleState.user = adminUsers.find(user => user.uid === consoleState.user.uid) || null;
+}
+
+async function setUserBlocked(blocked) {
+    const user = consoleState.user;
+
+    if (Boolean(user.blocked) === blocked) {
+        consolePrint(`${user.username} is already ${blocked ? "blocked" : "active"}.`, "console-dim");
+        return;
+    }
+
+    consoleState.busy = true;
+
+    try {
+        const line = await consoleType(blocked ? `Revoking access for ${user.username} ... ` : `Restoring access for ${user.username} ... `, "console-dim");
+        await db.collection("users").doc(user.uid).update({ blocked });
+        await consoleProgress(blocked ? "  locking" : "  unlocking", 8);
+        line.textContent += "OK";
+
+        await loadAdminData();
+        refreshOpenUser();
+        await consoleType(blocked ? `${user.username} is LOCKED.` : `${user.username} is UNLOCKED.`, blocked ? "console-error" : "console-ok");
+    } catch (error) {
+        console.error("Console block failed:", error);
+        consolePrint("FAILED: the change was not saved.", "console-error");
+    }
+
+    consoleState.busy = false;
+}
+
+function deleteUserFlow() {
+    const user = consoleState.user;
+
+    ask(`Type OK to delete ${user.username}. Anything else cancels.`, async answer => {
+        if (answer.trim().toUpperCase() !== "OK") {
+            consolePrint("Cancelled. Nothing was deleted.", "console-dim");
+            return;
+        }
+
+        consoleState.busy = true;
+
+        try {
+            await consoleType(`rm users/${user.uid} ... `, "console-dim");
+            await db.collection("users").doc(user.uid).delete();
+            await consoleType(`rm adminNotes/${user.uid} ... `, "console-dim");
+            await db.collection("adminNotes").doc(user.uid).delete();
+            await consoleProgress("  wiping traces", 12);
+
+            await consoleType(`${user.username} is deleted.`, "console-ok");
+            consolePrint("Their list's movies are kept. The login itself must also be deleted in the Firebase console under Authentication → Users.", "console-warn");
+        } catch (error) {
+            console.error("Console delete user failed:", error);
+            consolePrint("FAILED: the user could not be deleted.", "console-error");
+        }
+
+        consoleState.busy = false;
+        await loadAdminData();
+        enterMode("users");
+    });
 }
 
 /* ---------- Create: asks one thing at a time, then Create or Back ---------- */
 
 // Asks a question; answering "back" at any step stops without saving
-function askStep(question, handler) {
+function askStep(question, handler, suggest = null) {
     ask(question, answer => {
         if (answer.trim().toLowerCase() === "back") {
             consolePrint("Not saved.", "console-dim");
@@ -402,7 +527,7 @@ function askStep(question, handler) {
         }
 
         return handler(answer);
-    }, "console-ask");
+    }, "console-ask", suggest);
 }
 
 // Shows everything that was typed, then waits for "create" or "back"
@@ -512,6 +637,14 @@ function createUserFlow() {
                 ["Password", draft.password],
                 ["List", draft.group.name || draft.group.id]
             ], saveUser);
+        }, typed => {
+            // A number picks from the list above, so only suggest for names
+            if (/^\d+$/.test(typed.trim()) || typed.trim().toLowerCase() === "back") return [];
+
+            return matchingGroups(typed).map(group => {
+                const users = adminUsers.filter(user => user.groupId === group.id).length;
+                return { label: `${group.name || group.id}   ${plural(users, "user")}`, value: group.id };
+            });
         });
     };
 
@@ -1031,9 +1164,14 @@ async function runConsole(text) {
     // Answering a question (OK, a name, a runtime...)
     if (consoleState.ask) {
         const handler = consoleState.ask;
+        // Enter takes the highlighted suggestion, if the question has any
+        const suggestion = askSuggestions(trimmed)[consoleState.highlighted];
+        const answer = suggestion ? suggestion.value : trimmed;
+
         consoleState.ask = null;
-        consolePrint(`> ${trimmed}`, "console-echo");
-        await handler(trimmed);
+        consoleState.askSuggest = null;
+        consolePrint(`> ${answer}`, "console-echo");
+        await handler(answer);
         setPrompt();
         return;
     }
@@ -1093,8 +1231,18 @@ async function runConsole(text) {
             setPrompt();
             consolePrint("Edit or Delete?", "console-dim");
         } else {
-            enterMode("lists");
+            enterMode(consoleState.mode === "user" ? "users" : "lists");
         }
+        return;
+    }
+
+    if (consoleState.mode === "user") {
+        if (!consoleState.user) return enterMode("users");
+        if (command === "info") return printUser(consoleState.user);
+        if (command === "block") return setUserBlocked(true);
+        if (command === "unblock") return setUserBlocked(false);
+        if (command === "delete" || command === "d" || command === "rm") return deleteUserFlow();
+        consolePrint('Type block, unblock or delete (or "help").', "console-error");
         return;
     }
 
@@ -1150,6 +1298,7 @@ consoleInput.addEventListener("keydown", async event => {
         consoleInput.value = "";
         lastConsoleValue = "";
         if (["group", "edit"].includes(consoleState.mode) && !consoleState.ask) enterMode("lists");
+        if (consoleState.mode === "user" && !consoleState.ask) enterMode("users");
         renderSuggestions();
         return;
     }
