@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="app-version" content="__VERSION__">
     <title>Movie Picker</title>
 
@@ -17,7 +17,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Movie Picker">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <!-- Full screen: the app draws behind the clock and battery (white text) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <link rel="stylesheet" href="style.css?v=__VERSION__">
 
@@ -25,6 +26,11 @@
 </head>
 
 <body>
+
+<!-- Dark strip behind the iPhone's clock, so the white clock stays readable.
+     Its height is the status bar's height, so it's invisible elsewhere. -->
+<div class="status-bar-backdrop" aria-hidden="true"></div>
+
 <div id="login">
 
     <h1>Movie Picker</h1>

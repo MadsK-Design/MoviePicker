@@ -72,6 +72,11 @@ body[data-theme="nicolai"]::after {
     98%           { background-color: transparent; }
 }
 
+/* The strip behind the iPhone clock blends into the dark background */
+body[data-theme="nicolai"] .status-bar-backdrop {
+    background: var(--night);
+}
+
 /* ---------- Text ---------- */
 
 body[data-theme="nicolai"] h1,

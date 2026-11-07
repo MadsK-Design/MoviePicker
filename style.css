@@ -2,6 +2,24 @@ body{
     font-family: Arial, sans-serif;
     margin:40px;
     background: white;
+
+    /* Full screen on iPhone: keep content below the clock and battery */
+    padding-top: env(safe-area-inset-top);
+}
+
+/* Dark strip behind the iPhone's white clock. Its height is the status
+   bar's height, so on screens without one it takes up no space. */
+.status-bar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 450;
+
+    height: env(safe-area-inset-top);
+    background: #111;
+
+    pointer-events: none;
 }
 
 input,
@@ -570,7 +588,9 @@ button {
     position: fixed;
     left: 12px;
     right: 12px;
-    bottom: 12px;
+
+    /* Above the iPhone's home bar at the bottom */
+    bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 500;
 
     display: flex;
@@ -611,7 +631,7 @@ button {
 
 /* Room so the last content isn't hidden behind the bottom menu */
 #app {
-    padding-bottom: 90px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 
 .action-section {
@@ -2167,4 +2187,9 @@ body:has(#admin:not(.hidden)) {
     #admin .hack-intro-granted {
         font-size: 22px;
     }
+}
+
+/* The strip behind the iPhone clock is plain black on the admin page */
+body:has(#admin:not(.hidden)) .status-bar-backdrop {
+    background: #000;
 }
