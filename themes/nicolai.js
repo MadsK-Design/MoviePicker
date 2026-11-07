@@ -155,9 +155,10 @@
 
     /* ---------- Jumpscares: "Watch me" ---------- */
 
-    // Pictures live in themes/nicolai-scares/. Each jumpscare is one step
-    // worse than the last; after the last step it keeps alternating
-    // between the two hardest ones. It never stops.
+    // Pictures live in themes/nicolai-scares/. The jumpscares come as a
+    // fast cycle, each one step worse than the last, about 30 seconds
+    // apart. After the last step there's a 20-minute break, and then a new
+    // cycle starts from the poster. It never stops.
     const SCARE_FOLDER = "themes/nicolai-scares/";
 
     const SCARES = [
@@ -168,11 +169,12 @@
         { image: "Sinister-2-Mr.-Boogie-aka-Bagul.avif", text: "WATCH ME", sub: "you can't hide from me", mood: "frenzy", sound: "scream", duration: 5600, vibrate: [200, 60, 200, 60, 700] }
     ];
 
-    const ACTIVE_TAPS = 5;            // this many taps...
-    const ACTIVE_WINDOW = 10000;      // ...within 10 seconds = he's paying attention
-    const COOLDOWN = 150000;          // at most one jumpscare every 2.5 minutes
-    const FIRST_DELAY = 60000;        // none in the first minute after opening
-    const CHANCE = .2;                // chance per tap once everything above is true
+    const ACTIVE_TAPS = 3;            // this many taps...
+    const ACTIVE_WINDOW = 8000;       // ...within 8 seconds = he's paying attention
+    const STEP_GAP = 30000;           // about 30 seconds between steps in a cycle
+    const CYCLE_BREAK = 20 * 60000;   // 20-minute break after the last step
+    const FIRST_DELAY = 15000;        // none in the first 15 seconds after opening
+    const CHANCE = .5;                // chance per tap once everything above is true
 
     const LEVEL_KEY = "nicolaiScareLevel";
     const LAST_KEY = "nicolaiScareLast";
@@ -217,17 +219,23 @@
         recentTaps = recentTaps.filter(time => now - time < ACTIVE_WINDOW);
         recentTaps.push(now);
 
+        const lastScare = readNumber(LAST_KEY);
+
+        // Back at the poster after a finished cycle = time for the long break
+        const cycleFinished = lastScare > 0 && readNumber(LEVEL_KEY) === 0;
+        const wait = cycleFinished ? CYCLE_BREAK : STEP_GAP;
+
         const isActive = recentTaps.length >= ACTIVE_TAPS;
-        const cooledDown = now - readNumber(LAST_KEY) > COOLDOWN && now - startedAt > FIRST_DELAY;
+        const cooledDown = now - lastScare > wait && now - startedAt > FIRST_DELAY;
 
         if (isActive && cooledDown && Math.random() < CHANCE) {
             runScare();
         }
     }
 
+    // After the last step, the next cycle starts again from the poster
     function nextLevel(level) {
-        const last = SCARES.length - 1;
-        return level < last ? level + 1 : (level === last ? last - 1 : last);
+        return (level + 1) % SCARES.length;
     }
 
     // Blood written on the screen, with drops running down from the letters
