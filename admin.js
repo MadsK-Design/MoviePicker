@@ -437,6 +437,33 @@ async function createGroupIfNeeded(groupName) {
     return groupId;
 }
 
+// Creates the Firebase login (without signing the admin out) and returns its uid.
+// Used by the Create User box and by the console.
+async function createLogin(username, password) {
+    const credential = await userCreatorAuth.createUserWithEmailAndPassword(
+        usernameToEmail(username),
+        padPassword(password)
+    );
+
+    await userCreatorAuth.signOut();
+    return credential.user.uid;
+}
+
+// Saves the user's profile and their password for the admin card
+async function linkUserToGroup(uid, username, password, groupId) {
+    await db.collection("users").doc(uid).set({
+        username: username,
+        groupId: groupId,
+        blocked: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Every new user gets their password saved on their card
+    await db.collection("adminNotes").doc(uid).set({
+        notes: password
+    });
+}
+
 async function createUser() {
     const username = newUserUsername.value.trim().toLowerCase();
     const password = newUserPassword.value;
@@ -477,13 +504,7 @@ async function createUser() {
     let uid;
 
     try {
-        const credential = await userCreatorAuth.createUserWithEmailAndPassword(
-            usernameToEmail(username),
-            padPassword(password)
-        );
-
-        uid = credential.user.uid;
-        await userCreatorAuth.signOut();
+        uid = await createLogin(username, password);
         logResult(credentialStep, true);
     } catch (error) {
         console.error("Error creating login:", error);
@@ -504,17 +525,7 @@ async function createUser() {
             groupId = await createGroupIfNeeded(newGroupName.value);
         }
 
-        await db.collection("users").doc(uid).set({
-            username: username,
-            groupId: groupId,
-            blocked: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Every new user gets their password saved on their card
-        await db.collection("adminNotes").doc(uid).set({
-            notes: password
-        });
+        await linkUserToGroup(uid, username, password, groupId);
         logResult(groupStep, true);
     } catch (error) {
         console.error("Error linking user to group:", error);

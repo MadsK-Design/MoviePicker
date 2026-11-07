@@ -1,6 +1,7 @@
-// The admin console: a small terminal for managing lists (groups).
-// Type to find a list, pick it with the arrow keys or a click, then
-// choose Edit or Delete. "help" always shows what you can type right now.
+// The admin console: a small terminal for managing lists (groups) and users.
+// First type "list" or "user" to choose what to work in. There you can search
+// (arrow keys or a click to pick) or type "create" to make a new one.
+// "help" always shows what you can type right now.
 
 const consoleOutput = document.getElementById("consoleOutput");
 const consoleInput = document.getElementById("consoleInput");
@@ -10,7 +11,7 @@ const consoleLive = document.getElementById("consoleLive");
 const consoleTyped = document.getElementById("consoleTyped");
 
 const consoleState = {
-    mode: "root",          // "root" | "group" | "edit"
+    mode: "root",          // "root" | "lists" | "users" | "group" | "edit"
     group: null,           // { id, name }
     movies: [],
     categories: [],
@@ -77,11 +78,14 @@ async function consoleProgress(label, steps = 10) {
 }
 
 function setPrompt() {
-    const path = consoleState.mode === "root"
-        ? "~"
-        : consoleState.mode === "group"
-            ? `~/${consoleState.group.id}`
-            : `~/${consoleState.group.id}/edit`;
+    const paths = {
+        root: "~",
+        lists: "~/lists",
+        users: "~/users",
+        group: `~/lists/${consoleState.group?.id}`,
+        edit: `~/lists/${consoleState.group?.id}/edit`
+    };
+    const path = paths[consoleState.mode];
 
     consolePrompt.textContent = consoleState.ask ? ">" : `root@moviepicker:${path}$`;
     renderLive();
@@ -197,8 +201,23 @@ async function loadGroupContents() {
 
 const HELP = {
     root: [
+        "What do you want to work in?",
+        "  list    (l)             the lists",
+        "  user    (u)             the users",
+        "  clear                   clear the screen"
+    ],
+    lists: [
         "Type the name of a list to find it.",
         "  ↑ ↓ + Enter, or click   open the list",
+        "  create                  make a new list",
+        "  back                    choose list or user again",
+        "  clear                   clear the screen"
+    ],
+    users: [
+        "Type a username to find a user.",
+        "  ↑ ↓ + Enter, or click   show the user",
+        "  create                  make a new user",
+        "  back                    choose list or user again",
         "  clear                   clear the screen"
     ],
     group: [
@@ -238,7 +257,20 @@ function printHelp() {
     HELP[consoleState.mode].forEach(line => consolePrint(line, "console-dim"));
 }
 
-/* ---------- Step 1: find a list ---------- */
+/* ---------- Step 1: choose list or user, then search ---------- */
+
+// Words that are commands, so typing them doesn't search
+const COMMAND_WORDS = ["help", "clear", "back", "exit", "create"];
+
+const ROOT_CHOICES = [
+    { mode: "lists", words: ["list", "lists", "l"], label: "list     work with the lists" },
+    { mode: "users", words: ["user", "users", "u"], label: "user     work with the users" }
+];
+
+function matchingRootChoices(text = consoleInput.value) {
+    const query = text.trim().toLowerCase();
+    return ROOT_CHOICES.filter(choice => !query || choice.words.some(word => word.startsWith(query)));
+}
 
 function matchingGroups(text = consoleInput.value) {
     const query = text.trim().toLowerCase();
@@ -248,30 +280,281 @@ function matchingGroups(text = consoleInput.value) {
     );
 }
 
-function renderSuggestions() {
-    const showList = consoleState.mode === "root" && !consoleState.ask && !consoleState.busy;
-    const typed = consoleInput.value.trim().toLowerCase();
-    const groups = showList && !["help", "clear"].includes(typed) ? matchingGroups() : [];
+// Users (not the admin) whose name or list matches
+function matchingUsers(text = consoleInput.value) {
+    const query = text.trim().toLowerCase();
 
-    consoleState.highlighted = Math.min(consoleState.highlighted, Math.max(groups.length - 1, 0));
+    return adminUsers.filter(user => {
+        if (user.admin === true) return false;
+        const group = adminGroups.find(group => group.id === user.groupId);
+        return !query || `${user.username || ""} ${group?.name || user.groupId || ""}`.toLowerCase().includes(query);
+    });
+}
+
+const plural = (number, word) => `${number} ${word}${number === 1 ? "" : "s"}`;
+
+// What can be picked right now: [{ label, pick }]
+function currentSuggestions(text = consoleInput.value) {
+    const typed = text.trim().toLowerCase();
+
+    if (COMMAND_WORDS.includes(typed)) {
+        return [];
+    }
+
+    if (consoleState.mode === "root") {
+        return matchingRootChoices(text).map(choice => ({
+            label: choice.label,
+            pick: () => enterMode(choice.mode, true)
+        }));
+    }
+
+    if (consoleState.mode === "lists") {
+        return matchingGroups(text).map(group => {
+            const users = adminUsers.filter(user => user.groupId === group.id).length;
+            return { label: `${group.name || group.id}   ${plural(users, "user")}`, pick: () => openGroup(group) };
+        });
+    }
+
+    if (consoleState.mode === "users") {
+        return matchingUsers(text).map(user => {
+            const group = adminGroups.find(group => group.id === user.groupId);
+            return { label: `${user.username}   ${group?.name || user.groupId || "no list"}`, pick: () => showUser(user) };
+        });
+    }
+
+    return [];
+}
+
+function renderSuggestions() {
+    const typed = consoleInput.value.trim().toLowerCase();
+    const suggestions = consoleState.ask || consoleState.busy ? [] : currentSuggestions();
+    const searching = ["root", "lists", "users"].includes(consoleState.mode) &&
+        !consoleState.ask && !consoleState.busy && typed && !COMMAND_WORDS.includes(typed);
+
+    consoleState.highlighted = Math.min(consoleState.highlighted, Math.max(suggestions.length - 1, 0));
     consoleSuggestions.innerHTML = "";
 
-    groups.forEach((group, index) => {
-        const users = adminUsers.filter(user => user.groupId === group.id).length;
+    suggestions.forEach((suggestion, index) => {
         const item = document.createElement("button");
 
         item.type = "button";
         item.className = `console-suggestion ${index === consoleState.highlighted ? "is-highlighted" : ""}`;
-        item.textContent = `${group.name || group.id}   ${users} user${users === 1 ? "" : "s"}`;
+        item.textContent = suggestion.label;
         item.addEventListener("mousedown", event => event.preventDefault());
-        item.addEventListener("click", () => openGroup(group));
+        item.addEventListener("click", () => {
+            consoleInput.value = "";
+            lastConsoleValue = "";
+            suggestion.pick();
+        });
 
         consoleSuggestions.appendChild(item);
     });
 
-    if (showList && typed && groups.length === 0 && !["help", "clear"].includes(typed)) {
-        consoleSuggestions.innerHTML = `<div class="console-suggestion-empty">no list matches "${escapeHtml(typed)}"</div>`;
+    if (searching && suggestions.length === 0) {
+        const what = { root: 'Type "list" or "user"', lists: "no list matches", users: "no user matches" }[consoleState.mode];
+        consoleSuggestions.innerHTML = consoleState.mode === "root"
+            ? `<div class="console-suggestion-empty">${what}</div>`
+            : `<div class="console-suggestion-empty">${what} "${escapeHtml(typed)}"</div>`;
     }
+}
+
+// Goes into "lists" or "users" (or back to the start)
+async function enterMode(mode, announce = false) {
+    consoleState.mode = mode;
+    consoleState.group = null;
+    consoleState.ask = null;
+    consoleState.highlighted = 0;
+
+    if (announce) {
+        consolePrint(`> ${mode === "lists" ? "list" : "user"}`, "console-echo");
+        await consoleType(mode === "lists"
+            ? `${plural(adminGroups.length, "list")}. Type a name to search, or "create".`
+            : `${plural(matchingUsers("").length, "user")}. Type a name to search, or "create".`, "console-dim");
+    }
+
+    setPrompt();
+    renderSuggestions();
+
+    if (announce) {
+        consoleInput.focus({ preventScroll: true });
+    }
+}
+
+function showUser(user) {
+    const group = adminGroups.find(group => group.id === user.groupId);
+
+    consolePrint(`> ${user.username}`, "console-echo");
+    consolePrint(`User      ${user.username}`, "console-heading");
+    consolePrint(`Password  ${passwordFromNote(adminNotes[user.uid]) || "–"}`);
+    consolePrint(`List      ${group?.name || user.groupId || "no list"}`);
+    consolePrint(`Status    ${user.blocked ? "blocked" : "active"}`, user.blocked ? "console-error" : "");
+    renderSuggestions();
+}
+
+/* ---------- Create: asks one thing at a time, then Create or Back ---------- */
+
+// Asks a question; answering "back" at any step stops without saving
+function askStep(question, handler) {
+    ask(question, answer => {
+        if (answer.trim().toLowerCase() === "back") {
+            consolePrint("Not saved.", "console-dim");
+            return;
+        }
+
+        return handler(answer);
+    }, "console-ask");
+}
+
+// Shows everything that was typed, then waits for "create" or "back"
+function confirmCreate(title, rows, save) {
+    consolePrint(title, "console-heading");
+    rows.forEach(([label, value]) => consolePrint(`  ${label.padEnd(10)}${value}`));
+
+    const askConfirm = () => ask('Type "create" to save, or "back" to not save.', async answer => {
+        const word = answer.trim().toLowerCase();
+
+        if (word === "back") {
+            consolePrint("Not saved.", "console-dim");
+        } else if (word === "create") {
+            await save();
+        } else {
+            askConfirm();
+        }
+    }, "console-warn");
+
+    askConfirm();
+}
+
+function createListFlow() {
+    const askName = () => askStep("Name of the list?", name => {
+        const id = toGroupId(name);
+
+        if (!id) {
+            consolePrint("The name needs at least one letter or number.", "console-error");
+            return askName();
+        }
+
+        if (adminGroups.some(group => group.id === id)) {
+            consolePrint(`A list called "${name.trim()}" already exists.`, "console-error");
+            return askName();
+        }
+
+        confirmCreate("New list:", [["Name", name.trim()], ["Id", id]], async () => {
+            consoleState.busy = true;
+
+            try {
+                await consoleType(`mkdir groups/${id} ... `, "console-dim");
+                await createGroupIfNeeded(name);
+                await consoleProgress("  allocating", 10);
+                await loadAdminData();
+                await consoleType(`${name.trim()} is created.`, "console-ok");
+            } catch (error) {
+                console.error("Console create list failed:", error);
+                consolePrint("FAILED: the list was not created.", "console-error");
+            }
+
+            consoleState.busy = false;
+        });
+    });
+
+    askName();
+}
+
+function createUserFlow() {
+    const draft = {};
+
+    const askUsername = () => askStep("Username?", text => {
+        const username = text.trim().toLowerCase();
+
+        if (!/^[a-z0-9._-]+$/.test(username)) {
+            consolePrint("Username can only use a-z, 0-9, dot, dash and underscore.", "console-error");
+            return askUsername();
+        }
+
+        if (adminUsers.some(user => (user.username || "").toLowerCase() === username)) {
+            consolePrint(`The username "${username}" is already taken.`, "console-error");
+            return askUsername();
+        }
+
+        draft.username = username;
+        askPassword();
+    });
+
+    const askPassword = () => askStep("Password?", text => {
+        if (!text) {
+            consolePrint("Please enter a password.", "console-error");
+            return askPassword();
+        }
+
+        draft.password = text;
+        askList();
+    });
+
+    const askList = () => {
+        consolePrint("Lists:", "console-dim");
+        adminGroups.forEach((group, i) => consolePrint(`${String(i + 1).padStart(3)}. ${group.name || group.id}`, "console-dim"));
+
+        askStep("Which list? (number or name)", text => {
+            const number = Number(text);
+            const group = Number.isInteger(number) && number > 0
+                ? adminGroups[number - 1]
+                : adminGroups.find(g => g.id === toGroupId(text) || (g.name || "").toLowerCase() === text.trim().toLowerCase());
+
+            if (!group) {
+                consolePrint(`No list "${text}". Make it first under "list" → "create".`, "console-error");
+                return askList();
+            }
+
+            draft.group = group;
+
+            confirmCreate("New user:", [
+                ["Username", draft.username],
+                ["Password", draft.password],
+                ["List", draft.group.name || draft.group.id]
+            ], saveUser);
+        });
+    };
+
+    async function saveUser() {
+        consoleState.busy = true;
+        const loginLine = await consoleType("Generating credentials ... ", "console-dim");
+
+        let uid;
+
+        try {
+            uid = await createLogin(draft.username, draft.password);
+            loginLine.textContent += "OK";
+        } catch (error) {
+            console.error("Console create login failed:", error);
+            loginLine.textContent += "FAILED";
+            consolePrint(error.code === "auth/email-already-in-use"
+                ? `The username "${draft.username}" is already taken.`
+                : "Could not create the login.", "console-error");
+            consoleState.busy = false;
+            return;
+        }
+
+        const linkLine = await consoleType(`Injecting into list ${draft.group.id} ... `, "console-dim");
+
+        try {
+            await linkUserToGroup(uid, draft.username, draft.password, draft.group.id);
+            linkLine.textContent += "OK";
+            await loadAdminData();
+            await consoleType(`ACCESS GRANTED: ${draft.username}`, "console-ok");
+        } catch (error) {
+            console.error("Console link user failed:", error);
+            linkLine.textContent += "FAILED";
+            consolePrint(
+                `The login "${draft.username}" was created, but could not be linked to a list. ` +
+                "Delete it in the Firebase console and try again.",
+                "console-error"
+            );
+        }
+
+        consoleState.busy = false;
+    }
+
+    askUsername();
 }
 
 async function openGroup(group) {
@@ -290,11 +573,7 @@ async function openGroup(group) {
 }
 
 function backToRoot() {
-    consoleState.mode = "root";
-    consoleState.group = null;
-    consoleState.ask = null;
-    setPrompt();
-    renderSuggestions();
+    enterMode("root");
 }
 
 /* ---------- Step 2a: delete a whole list ---------- */
@@ -367,7 +646,7 @@ async function deleteGroupFlow() {
 
         consoleState.busy = false;
         await loadAdminData();
-        backToRoot();
+        enterMode("lists");
     });
 }
 
@@ -763,7 +1042,8 @@ async function runConsole(text) {
     const command = word.toLowerCase();
     const rest = restParts.join(" ");
 
-    if (consoleState.mode === "root") {
+    // The start, the list search and the user search: commands, or pick a match
+    if (["root", "lists", "users"].includes(consoleState.mode)) {
         if (command === "help") {
             consolePrint("> help", "console-echo");
             return printHelp();
@@ -774,14 +1054,28 @@ async function runConsole(text) {
             return;
         }
 
-        // Use what was typed (the input line is already cleared by now)
-        const group = matchingGroups(trimmed)[consoleState.highlighted];
+        if (consoleState.mode !== "root" && (command === "back" || command === "exit")) {
+            consolePrint(`> ${command}`, "console-echo");
+            return enterMode("root");
+        }
 
-        if (group) {
-            await openGroup(group);
+        if (consoleState.mode !== "root" && command === "create") {
+            consolePrint("> create", "console-echo");
+            return consoleState.mode === "lists" ? createListFlow() : createUserFlow();
+        }
+
+        // Use what was typed (the input line is already cleared by now)
+        const match = currentSuggestions(trimmed)[consoleState.highlighted];
+
+        if (match && trimmed) {
+            await match.pick();
         } else if (trimmed) {
             consolePrint(`> ${trimmed}`, "console-echo");
-            consolePrint("No list found.", "console-error");
+            consolePrint({
+                root: 'Type "list" or "user" (or "help").',
+                lists: "No list found.",
+                users: "No user found."
+            }[consoleState.mode], "console-error");
         }
 
         return;
@@ -799,7 +1093,7 @@ async function runConsole(text) {
             setPrompt();
             consolePrint("Edit or Delete?", "console-dim");
         } else {
-            backToRoot();
+            enterMode("lists");
         }
         return;
     }
@@ -855,7 +1149,7 @@ consoleInput.addEventListener("keydown", async event => {
     if (event.key === "Escape") {
         consoleInput.value = "";
         lastConsoleValue = "";
-        if (consoleState.mode !== "root" && !consoleState.ask) backToRoot();
+        if (["group", "edit"].includes(consoleState.mode) && !consoleState.ask) enterMode("lists");
         renderSuggestions();
         return;
     }
@@ -893,5 +1187,5 @@ function startConsole() {
     consoleState.ask = null;
     consoleState.busy = false;
     backToRoot();
-    consolePrint("MoviePicker console. Type a list's name, or help.", "console-dim");
+    consolePrint('MoviePicker console. Type "list" or "user", or help.', "console-dim");
 }
