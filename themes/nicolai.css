@@ -1,0 +1,635 @@
+@import url("https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap");
+
+/* ============================================
+   Design for the Nicolai list: HORROR
+   ============================================
+
+   Only loaded when someone in the "nicolai" group logs in.
+   Effects (blood on tap, door intro) live in themes/nicolai.js.
+   Every rule starts with body[data-theme="nicolai"] so nothing
+   leaks into the other lists.
+*/
+
+body[data-theme="nicolai"] {
+    --blood: #8a0303;
+    --blood-bright: #c40000;
+    --blood-dark: #4a0000;
+    --bone: #e8dcc8;
+    --ash: #8c8279;
+    --night: #0b0606;
+    --rot: #1a0e0e;
+
+    --horror-title: "Creepster", "Chiller", fantasy;
+    --horror-text: "Special Elite", "Courier New", monospace;
+
+    background:
+        radial-gradient(ellipse at center, #1c0a0a 0%, var(--night) 70%, #000 100%) fixed;
+    color: var(--bone);
+    font-family: var(--horror-text);
+}
+
+/* ---------- Atmosphere: fog, vignette and lightning ---------- */
+
+/* Drifting fog behind everything */
+body[data-theme="nicolai"]::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+
+    background:
+        radial-gradient(ellipse 40% 20% at 20% 80%, rgba(180, 160, 160, .10), transparent 70%),
+        radial-gradient(ellipse 50% 25% at 75% 70%, rgba(160, 140, 140, .08), transparent 70%),
+        radial-gradient(ellipse 35% 18% at 50% 95%, rgba(200, 180, 180, .10), transparent 70%);
+
+    pointer-events: none;
+    animation: horror-fog 24s ease-in-out infinite alternate;
+}
+
+@keyframes horror-fog {
+    from { transform: translateX(-6%) translateY(0); }
+    to   { transform: translateX(6%) translateY(-3%); }
+}
+
+/* Dark red vignette and the odd lightning flash on top */
+body[data-theme="nicolai"]::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(60, 0, 0, .55) 100%);
+
+    pointer-events: none;
+    animation: horror-lightning 17s infinite;
+}
+
+@keyframes horror-lightning {
+    0%, 93%, 100% { background-color: transparent; }
+    94%           { background-color: rgba(255, 255, 255, .22); }
+    95%           { background-color: transparent; }
+    96%           { background-color: rgba(255, 255, 255, .35); }
+    98%           { background-color: transparent; }
+}
+
+/* ---------- Text ---------- */
+
+body[data-theme="nicolai"] h1,
+body[data-theme="nicolai"] h2,
+body[data-theme="nicolai"] h3 {
+    font-family: var(--horror-title);
+    font-weight: normal;
+    letter-spacing: 1.5px;
+}
+
+/* "Movie Picker" flickers like a dying light bulb */
+body[data-theme="nicolai"] .top-bar h1 {
+    color: var(--blood-bright);
+    font-size: 36px;
+    text-shadow: 0 0 10px rgba(196, 0, 0, .7), 0 2px 0 #000;
+    animation: horror-flicker 6s infinite;
+}
+
+@keyframes horror-flicker {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px rgba(196, 0, 0, .7), 0 2px 0 #000;
+    }
+    20%, 24%, 55% {
+        opacity: .35;
+        text-shadow: none;
+    }
+}
+
+body[data-theme="nicolai"] #moviesHeading {
+    color: var(--bone);
+    font-size: 30px;
+    text-shadow: 0 0 8px rgba(138, 3, 3, .9);
+}
+
+body[data-theme="nicolai"] #currentMovieList,
+body[data-theme="nicolai"] .watched-switch {
+    color: var(--ash);
+}
+
+/* ---------- Buttons: blood red, dripping, shudder when pressed ---------- */
+
+body[data-theme="nicolai"] button {
+    position: relative;
+    font-family: var(--horror-text);
+}
+
+body[data-theme="nicolai"] #addMovie,
+body[data-theme="nicolai"] #randomMovieButton,
+body[data-theme="nicolai"] .random-watch-button,
+body[data-theme="nicolai"] #confirmMovieListButton,
+body[data-theme="nicolai"] #confirmGenreButton,
+body[data-theme="nicolai"] #saveEditButton,
+body[data-theme="nicolai"] #saveMovieListsButton {
+    background: linear-gradient(180deg, var(--blood-bright), var(--blood) 60%, var(--blood-dark));
+    color: var(--bone);
+    border: 1px solid #2a0000;
+    border-radius: 6px;
+
+    font-family: var(--horror-title);
+    font-size: 20px !important;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 2px #000;
+
+    box-shadow: 0 4px 14px rgba(138, 3, 3, .5);
+}
+
+/* Blood dripping off the bottom of the big red buttons */
+body[data-theme="nicolai"] #addMovie::after,
+body[data-theme="nicolai"] #randomMovieButton::after {
+    content: "";
+    position: absolute;
+    left: 12%;
+    top: 100%;
+
+    width: 76%;
+    height: 14px;
+
+    background:
+        radial-gradient(circle at 10% 0, var(--blood-dark) 4px, transparent 5px),
+        radial-gradient(circle at 34% 0, var(--blood-dark) 3px, transparent 4px),
+        radial-gradient(circle at 61% 0, var(--blood-dark) 5px, transparent 6px),
+        radial-gradient(circle at 88% 0, var(--blood-dark) 3px, transparent 4px);
+
+    pointer-events: none;
+    animation: horror-drip 3.5s ease-in infinite;
+}
+
+@keyframes horror-drip {
+    0%   { transform: scaleY(.4); transform-origin: top; opacity: 1; }
+    70%  { transform: scaleY(1.6); opacity: 1; }
+    100% { transform: scaleY(1.8) translateY(6px); opacity: 0; }
+}
+
+body[data-theme="nicolai"] button:active {
+    animation: horror-shudder .25s linear;
+}
+
+@keyframes horror-shudder {
+    0%, 100% { transform: translate(0, 0); }
+    20%      { transform: translate(-2px, 1px) rotate(-1deg); }
+    40%      { transform: translate(2px, -1px) rotate(1deg); }
+    60%      { transform: translate(-1px, 2px); }
+    80%      { transform: translate(1px, -2px); }
+}
+
+body[data-theme="nicolai"] #logoutButton {
+    background: transparent;
+    color: var(--blood-bright);
+    border: 1px solid var(--blood);
+}
+
+/* Secondary buttons: old dark wood */
+body[data-theme="nicolai"] #addGenreButton,
+body[data-theme="nicolai"] #selectListsForNewMovieButton,
+body[data-theme="nicolai"] #addMovieListButton,
+body[data-theme="nicolai"] .search-toggle-button,
+body[data-theme="nicolai"] #cancelEditButton,
+body[data-theme="nicolai"] #cancelMovieListButton,
+body[data-theme="nicolai"] #cancelGenreButton,
+body[data-theme="nicolai"] #cancelAddToListButton,
+body[data-theme="nicolai"] #genreButton,
+body[data-theme="nicolai"] #filterGenreButton,
+body[data-theme="nicolai"] #listFilterGenreButton {
+    background: linear-gradient(180deg, #2b1a14, #1a0f0b);
+    color: var(--bone);
+    border: 1px solid #3d2620;
+}
+
+body[data-theme="nicolai"] .search-toggle-button.active-filter {
+    background: var(--blood);
+    border-color: var(--blood-bright);
+    box-shadow: 0 0 12px rgba(196, 0, 0, .6);
+}
+
+/* ---------- Category row ---------- */
+
+body[data-theme="nicolai"] .movie-list-button {
+    background: var(--rot);
+    color: var(--ash);
+    border: 1px solid #3a1c1c;
+    font-family: var(--horror-text);
+}
+
+body[data-theme="nicolai"] .movie-list-button.active-movie-list {
+    background: var(--blood);
+    color: var(--bone);
+    border-color: var(--blood-bright);
+    box-shadow: 0 0 10px rgba(196, 0, 0, .55);
+}
+
+body[data-theme="nicolai"] .editing-lists .custom-list-button.reordering {
+    box-shadow: 0 0 0 3px var(--blood-bright);
+}
+
+/* ---------- Movie cards: scratched, blood-edged, creep in ---------- */
+
+body[data-theme="nicolai"] .movie-card,
+body[data-theme="nicolai"] .random-result {
+    background:
+        repeating-linear-gradient(115deg, transparent 0 18px, rgba(255, 255, 255, .015) 18px 19px),
+        linear-gradient(160deg, #1f1212, #120909);
+    color: var(--bone);
+
+    border: 1px solid #3a1818;
+    border-left: 3px solid var(--blood);
+    border-radius: 6px;
+
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .7), inset 0 0 30px rgba(0, 0, 0, .6);
+
+    animation: horror-creep .6s ease-out both;
+}
+
+body[data-theme="nicolai"] .movie-card:nth-child(2) { animation-delay: .06s; }
+body[data-theme="nicolai"] .movie-card:nth-child(3) { animation-delay: .12s; }
+body[data-theme="nicolai"] .movie-card:nth-child(4) { animation-delay: .18s; }
+body[data-theme="nicolai"] .movie-card:nth-child(n + 5) { animation-delay: .24s; }
+
+@keyframes horror-creep {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(.98);
+        filter: blur(3px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+body[data-theme="nicolai"] .movie-card h3,
+body[data-theme="nicolai"] .random-result h2 {
+    color: var(--bone);
+    font-size: 22px;
+}
+
+body[data-theme="nicolai"] .random-result h3 {
+    color: var(--blood-bright);
+}
+
+body[data-theme="nicolai"] .movie-card strong,
+body[data-theme="nicolai"] .random-result strong {
+    color: var(--ash);
+    font-weight: normal;
+}
+
+body[data-theme="nicolai"] .watched-tag {
+    background: var(--blood-dark);
+    color: var(--bone);
+}
+
+/* Three-dot menu on each movie */
+body[data-theme="nicolai"] .movie-menu-button {
+    color: var(--ash);
+    background: transparent;
+}
+
+body[data-theme="nicolai"] .movie-menu-content,
+body[data-theme="nicolai"] .list-action-menu,
+body[data-theme="nicolai"] .dropdown-content {
+    background: #160b0b;
+    color: var(--bone);
+    border: 1px solid #3a1818;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .8);
+}
+
+body[data-theme="nicolai"] .movie-menu-content button,
+body[data-theme="nicolai"] .list-action-menu button {
+    background: transparent;
+    color: var(--bone);
+}
+
+body[data-theme="nicolai"] .movie-menu-content button:hover,
+body[data-theme="nicolai"] .list-action-menu button:hover {
+    background: var(--blood-dark);
+}
+
+body[data-theme="nicolai"] .delete-movie-button,
+body[data-theme="nicolai"] #deleteListButton {
+    color: var(--blood-bright);
+}
+
+/* ---------- Inputs ---------- */
+
+body[data-theme="nicolai"] input:not([type="checkbox"]),
+body[data-theme="nicolai"] select,
+body[data-theme="nicolai"] textarea {
+    background: #120909;
+    color: var(--bone);
+    caret-color: var(--blood-bright);
+
+    border: 1px solid #3a1818;
+    font-family: var(--horror-text);
+}
+
+body[data-theme="nicolai"] input::placeholder,
+body[data-theme="nicolai"] textarea::placeholder {
+    color: #6b5f57;
+}
+
+body[data-theme="nicolai"] input:not([type="checkbox"]):focus,
+body[data-theme="nicolai"] select:focus,
+body[data-theme="nicolai"] textarea:focus {
+    outline: none;
+    border-color: var(--blood-bright);
+    box-shadow: 0 0 10px rgba(196, 0, 0, .5);
+}
+
+body[data-theme="nicolai"] .watched-toggle {
+    background: #120909;
+    color: var(--ash);
+    border-color: #3a1818;
+}
+
+body[data-theme="nicolai"] .watched-toggle:has(input:checked),
+body[data-theme="nicolai"] .watched-switch input:checked + .switch-track {
+    background: var(--blood);
+    color: var(--bone);
+}
+
+body[data-theme="nicolai"] .switch-track {
+    background: #3a2a2a;
+}
+
+body[data-theme="nicolai"] input[type="checkbox"] {
+    accent-color: var(--blood);
+}
+
+/* ---------- Pop-up windows ---------- */
+
+body[data-theme="nicolai"] .modal {
+    background: rgba(0, 0, 0, .8);
+}
+
+body[data-theme="nicolai"] .modal-content {
+    background: linear-gradient(170deg, #1d1010, #0e0606);
+    color: var(--bone);
+    border: 1px solid var(--blood-dark);
+    box-shadow: 0 0 40px rgba(138, 3, 3, .45);
+}
+
+body[data-theme="nicolai"] .custom-genre-row {
+    background: #160b0b;
+}
+
+/* ---------- Bottom menu: dark iron, glowing blood-red tab ---------- */
+
+body[data-theme="nicolai"] .bottom-nav {
+    background: linear-gradient(180deg, #1b1414, #0c0808);
+    border: 1px solid #2e2020;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, .9), 0 0 18px rgba(138, 3, 3, .25);
+}
+
+body[data-theme="nicolai"] .bottom-nav .bottom-nav-button {
+    color: var(--ash);
+    font-family: var(--horror-title);
+    font-size: 17px !important;
+    letter-spacing: 1px;
+}
+
+body[data-theme="nicolai"] .bottom-nav .bottom-nav-button.active-tab {
+    background: radial-gradient(circle at 50% 120%, var(--blood-bright), var(--blood) 55%, var(--blood-dark));
+    color: var(--bone);
+    box-shadow: 0 0 16px rgba(196, 0, 0, .6);
+}
+
+/* ---------- Blood splat on tap (made in nicolai.js) ---------- */
+
+.horror-splat {
+    position: fixed;
+    z-index: 3000;
+
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+
+    pointer-events: none;
+    animation: horror-splat 1.8s ease-out forwards;
+}
+
+@keyframes horror-splat {
+    0%   { transform: scale(.2) rotate(var(--spin)); opacity: 1; }
+    12%  { transform: scale(1.1) rotate(var(--spin)); opacity: 1; }
+    20%  { transform: scale(1) rotate(var(--spin)); opacity: 1; }
+    70%  { opacity: .85; }
+    100% { transform: scale(1.05) rotate(var(--spin)) translateY(10px); opacity: 0; }
+}
+
+/* ---------- Respect "Reduce Motion" ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    body[data-theme="nicolai"] *,
+    body[data-theme="nicolai"]::before,
+    body[data-theme="nicolai"]::after {
+        animation: none !important;
+    }
+}
+
+/* ---------- Door intro into the haunted house (made in nicolai.js) ---------- */
+
+.horror-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+
+    overflow: hidden;
+    background: #000;
+    perspective: 1100px;
+
+    transition: opacity .6s ease;
+}
+
+.horror-intro.is-done {
+    opacity: 0;
+}
+
+/* The night outside: sky, moon and the house */
+.horror-scene {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: flex-end;
+
+    background:
+        radial-gradient(ellipse at 75% 20%, rgba(90, 30, 40, .55), transparent 60%),
+        linear-gradient(180deg, #07040c 0%, #1a0a14 55%, #2a0d0d 100%);
+
+    transition: transform 1.5s cubic-bezier(.6, 0, .9, .5), filter 1.5s ease-in;
+}
+
+.horror-intro.is-entering .horror-scene {
+    transform: scale(9);
+    filter: brightness(0);
+}
+
+.horror-house {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+}
+
+.horror-window {
+    animation: horror-window-flicker 2.2s infinite;
+}
+
+@keyframes horror-window-flicker {
+    0%, 40%, 44%, 100% { opacity: 1; }
+    42%                { opacity: .3; }
+    70%                { opacity: .8; }
+}
+
+.horror-house-door {
+    filter: drop-shadow(0 0 6px #ff7a00);
+}
+
+/* Bats flapping across the moon */
+.horror-bat {
+    animation: horror-bat-fly 5s linear infinite;
+}
+
+.horror-bat-2 {
+    animation-duration: 6.5s;
+    animation-delay: -2s;
+}
+
+.horror-bat-3 {
+    animation-duration: 4.2s;
+    animation-delay: -3.3s;
+}
+
+@keyframes horror-bat-fly {
+    0%   { transform: translate(410px, 70px) scale(.7); }
+    25%  { transform: translate(300px, 40px) scale(.7, .4); }
+    50%  { transform: translate(200px, 80px) scale(.7); }
+    75%  { transform: translate(100px, 50px) scale(.7, .4); }
+    100% { transform: translate(-30px, 70px) scale(.7); }
+}
+
+/* The heavy double doors */
+.horror-door {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+
+    background:
+        linear-gradient(180deg, transparent 18%, #120a06 18%, #120a06 21%, transparent 21%,
+                                transparent 79%, #120a06 79%, #120a06 82%, transparent 82%),
+        repeating-linear-gradient(90deg, #3b2416 0 26px, #2a190f 26px 28px, #45291a 28px 52px, #2a190f 52px 54px),
+        #2f1d12;
+
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, .85);
+
+    transition: transform 1.6s cubic-bezier(.5, 0, .3, 1);
+    animation: horror-rattle .12s linear 6 .35s;
+}
+
+.horror-door-left {
+    left: 0;
+    transform-origin: left center;
+    border-right: 2px solid #0a0503;
+}
+
+.horror-door-right {
+    right: 0;
+    transform-origin: right center;
+    border-left: 2px solid #0a0503;
+}
+
+.horror-intro.is-open .horror-door-left {
+    transform: rotateY(-105deg);
+}
+
+.horror-intro.is-open .horror-door-right {
+    transform: rotateY(105deg);
+}
+
+@keyframes horror-rattle {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 2px -1px; }
+}
+
+/* Iron ring handles */
+.horror-handle {
+    position: absolute;
+    top: 50%;
+
+    width: 26px;
+    height: 26px;
+    margin-top: -13px;
+
+    border: 4px solid #1a1a1a;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .8), inset 0 0 3px rgba(255, 255, 255, .15);
+}
+
+.horror-door-left .horror-handle {
+    right: 14px;
+}
+
+.horror-door-right .horror-handle {
+    left: 14px;
+}
+
+.horror-dare {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 22%;
+    margin: 0;
+
+    color: #c40000;
+    font-family: "Creepster", "Chiller", fantasy;
+    font-size: 40px;
+    text-align: center;
+    text-shadow: 0 0 14px rgba(196, 0, 0, .8), 0 3px 0 #000;
+
+    animation: horror-flicker 2s infinite;
+    transition: opacity .5s;
+}
+
+.horror-intro.is-open .horror-dare {
+    opacity: 0;
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .horror-intro {
+        display: none;
+    }
+}
+
+/* Fields that have their own stronger rules in style.css */
+body[data-theme="nicolai"] #movieName,
+body[data-theme="nicolai"] #movieSearch,
+body[data-theme="nicolai"] #movieHours,
+body[data-theme="nicolai"] #movieMinutes,
+body[data-theme="nicolai"] #filterHours,
+body[data-theme="nicolai"] #filterMinutes,
+body[data-theme="nicolai"] #listFilterHours,
+body[data-theme="nicolai"] #listFilterMinutes,
+body[data-theme="nicolai"] #editMovieName,
+body[data-theme="nicolai"] #editMovieHours,
+body[data-theme="nicolai"] #editMovieMinutes,
+body[data-theme="nicolai"] #newMovieListName,
+body[data-theme="nicolai"] #newGenreName {
+    background: #120909;
+    color: var(--bone);
+    border: 1px solid #3a1818;
+    box-shadow: none;
+}
+
+body[data-theme="nicolai"] #movieName:focus,
+body[data-theme="nicolai"] #movieSearch:focus,
+body[data-theme="nicolai"] #listFilterHours:focus,
+body[data-theme="nicolai"] #listFilterMinutes:focus {
+    border-color: var(--blood-bright);
+    box-shadow: 0 0 10px rgba(196, 0, 0, .5);
+}
