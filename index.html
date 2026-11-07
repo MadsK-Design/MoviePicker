@@ -8,28 +8,17 @@
     <title>Movie Picker</title>
 
     <!-- Lets the site be installed as an app on the home screen.
-         "?admin" is the second app (MP Admin) with its own name, icon and start
-         address. The tags are written here, before Safari reads them, so it
-         never sees the normal app's icon first. -->
-    <script>
-        (function () {
-            const secondApp = new URLSearchParams(location.search).has("admin");
-            const icon = file => `icons/${secondApp ? "admin-" : ""}${file}`;
-            const name = secondApp ? "MP Admin" : "Movie Picker";
-
-            document.write(`
-                <link rel="manifest" href="${secondApp ? "manifest-admin.json" : "manifest.json"}">
-                <link rel="icon" href="${icon("icon-192.png")}">
-                <link rel="apple-touch-icon" href="${icon("apple-touch-icon.png")}">
-                <meta name="apple-mobile-web-app-title" content="${name}">
-            `);
-
-            document.title = name;
-        })();
-    </script>
+         The deploy also makes admin/index.html from this file: the second app
+         (MP Admin) with its own login, name and icon. See make-admin-page.sh. -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
     <meta name="theme-color" content="#ffffff">
+
+    <!-- iPhone reads these instead of the manifest -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Movie Picker">
     <!-- Full screen: the app draws behind the clock and battery (white text) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 

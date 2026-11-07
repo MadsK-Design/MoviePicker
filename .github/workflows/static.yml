@@ -38,6 +38,9 @@ jobs:
           VERSION="${GITHUB_SHA::7}"
           sed -i "s/__VERSION__/$VERSION/g" index.html
           echo "{\"version\": \"$VERSION\"}" > version.json
+      # The second app (MP Admin) at /admin/, made from the stamped index.html
+      - name: Make admin page
+        run: bash make-admin-page.sh
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -1,8 +1,8 @@
 {
     "name": "MP Admin",
     "short_name": "MP Admin",
-    "id": "./?admin",
-    "start_url": "./?admin",
+    "id": "./admin/",
+    "start_url": "./admin/",
     "scope": "./",
     "display": "standalone",
     "background_color": "#ffffff",
