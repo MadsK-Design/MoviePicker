@@ -134,10 +134,10 @@ async function hackType(command) {
 
     for (let i = 1; i <= command.length; i++) {
         line.textContent = `${HACK_PROMPT}${command.slice(0, i)}\n`;
-        await sleep(15 + Math.random() * 35);
+        await sleep(5 + Math.random() * 12);
     }
 
-    await sleep(150);
+    await sleep(60);
 }
 
 async function hackHexDump(rows) {
@@ -146,7 +146,7 @@ async function hackHexDump(rows) {
         const bytes = Array.from({ length: 8 }, () => randomFrom("0123456789abcdef", 2)).join(" ");
 
         hackPrint(`${address}  ${bytes}`, "hack-dim");
-        await sleep(45);
+        await sleep(25);
     }
 }
 
@@ -154,9 +154,9 @@ async function hackHexDump(rows) {
 async function hackCrack(label, length) {
     const line = hackPrint("");
 
-    for (let round = 0; round < 18; round++) {
+    for (let round = 0; round < 10; round++) {
         line.textContent = `${label} ${randomFrom(HACK_JUNK, length)}\n`;
-        await sleep(45);
+        await sleep(35);
     }
 
     line.textContent = `${label} ${"*".repeat(length)}  [FOUND]\n`;
@@ -168,18 +168,18 @@ async function playHackScript() {
     hackPrint("PORT     STATE  SERVICE", "hack-dim");
     hackPrint("22/tcp   open   ssh");
     hackPrint("443/tcp  open   https");
-    await sleep(250);
+    await sleep(100);
 
     await hackType("./exploit --target moviepicker.app --user admin");
 
     for (const step of ["Bypassing firewall ..........", "Injecting payload ..........."]) {
-        await sleep(180);
+        await sleep(80);
         hackPrint(`[*] ${step} OK`, "hack-ok");
     }
 
-    await hackHexDump(5);
+    await hackHexDump(3);
     await hackCrack("[*] Cracking admin key:", 12);
-    await sleep(150);
+    await sleep(60);
 
     await hackType("decrypt --database users");
 }
@@ -207,7 +207,7 @@ function startHackIntro() {
     drawHackProgress(progress);
 
     const progressTimer = setInterval(() => {
-        progress += (90 - progress) * 0.03;
+        progress += (90 - progress) * 0.06;
         drawHackProgress(progress);
     }, 80);
 
@@ -223,7 +223,7 @@ function startHackIntro() {
             }
 
             hackIntroGranted.classList.remove("hidden");
-            await sleep(1000);
+            await sleep(650);
 
             hackIntro.classList.add("fade-out");
             await sleep(450);
